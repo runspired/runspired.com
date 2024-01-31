@@ -18,9 +18,7 @@ of sight.
 
 In this post, I want to walk through one of the key changes that comes with RequestManager
 that highlights the advantages of the changing architecture, as well as tease a bit of what
-is still to come.
-
-**All requests should use EmberData**
+is still to come: **All requests should use EmberData**
 
 But first, a short overview of the shift to RequestManager.
 
