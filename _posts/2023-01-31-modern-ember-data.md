@@ -498,7 +498,7 @@ The reasons for why this is so important will go into my next post which will di
 
 #### Migrations That Affect Product
 
-Lets say we wanted to change our API from using ActiveModel to using JSON:API as its format. The response in both cases in JSON but the shape is very different. How would
+Lets say we wanted to change our API from using ActiveModel to using JSON:API as its format. The response in both cases is JSON but the shape is very different. How would
 we handle this with builders? For this exercise, lets assume the API version stays the
 same and the new format is controlled by JSON:API's expected header.
 
