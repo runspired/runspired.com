@@ -86,7 +86,7 @@ I will sum up: convert this:
 ```ts
 class MyService {
   async queryData(query) {
-    const response = await fetch(`/api/v1/my-data`, {
+    const response = await fetch(`/api/v1/company`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json'
@@ -107,7 +107,7 @@ class MyService {
 
     async queryData(query) {
       const response = await this.requestManager.request({
-        url: `/api/v1/my-data`,
+        url: `/api/v1/company`,
         method: 'POST',
         headers: {
           'content-type': 'application/json'
@@ -175,7 +175,7 @@ This means that immediately our code example started handling a number of scenar
 - The fetch code is SSR ready
 - We account for libraries like mirage that will try to dynamically swap out `fetch` for its own version
 - A test waiter is automatically installed to help prevent leaky or flakey tests
-- AbortController is automatically wired in
+- AbortController is automatically wired-in
 - Streaming Responses are automatically prepared for
 - Vague network level errors are converted into meaningful error objects
 - The `date` header is autoset on the response if not already present to ensure the ability to check request age
@@ -211,7 +211,7 @@ class MyService {
 
     async queryData(query) {
       const response = await this.requestManager.request({
-        url: `/api/v1/my-data`,
+        url: `/api/v1/company`,
         method: 'POST',
         headers: {
           'content-type': 'application/json'
@@ -288,7 +288,7 @@ class MyService {
 
     async queryData(query) {
       const response = await this.requestManager.request(
-        queryData(query, 'my-data')
+        queryData(query, 'company')
       );
       return response.content;
     }
@@ -315,7 +315,7 @@ class Route {
             limit: 50,
             offset: Number(offset)
 -        };
-+        }, 'my-data');
++        }, 'company');
 -        const data = await this.myService.queryData(query);
 +        const result = await this.requestManager.request(query);
 
@@ -343,7 +343,7 @@ class Route {
             sort: 'name:asc',
             limit: 50,
             offset: Number(offset)
-        }, 'my-data');
+        }, 'company');
         const result = await this.requestManager.request(query);
 
         return {
@@ -363,7 +363,7 @@ behind the extra service, so it level sets expectations of what they can expect 
 to do.
 
 The developer also now gets direct access to the response of the request, which gives them access
-to the wired in AbortController, additional request and response information, and the ability
+to the wired-in AbortController, additional request and response information, and the ability
 to stream the response if they choose. Our wrapper while useful was previously discarding the capabilities from being accessible to the developer. "Use the platform" has a friend: "Use the framework". These things feel invisible, but they are there ready for when they are needed, no workarounds necessary.
 
 ### Incrementally Migrating With Builders
@@ -550,7 +550,7 @@ class Route {
             sort: 'name:asc',
             limit: 50,
             offset: Number(offset)
-        }, 'my-data');
+        }, 'company');
         const result = await this.requestManager.request(query);
 
         return {
@@ -583,7 +583,7 @@ class Route {
             sort: 'name:asc',
             limit: 50,
             offset: Number(offset)
-        }, 'my-data');
+        }, 'company');
 -        const result = await this.requestManager.request(query);
 +        const result = await this.store.request(query);
 
@@ -619,7 +619,7 @@ class Route {
 
     async model({ search, offset }) {
         const result = await this.requestManager.request(aql`
-          QUERY my-data {
+          QUERY company {
             data {}
             filter {
               @arg search = ${search}
