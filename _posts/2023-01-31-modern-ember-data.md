@@ -86,7 +86,7 @@ I will sum up: convert this:
 ```ts
 class MyService {
   async queryData(query) {
-    const response = await fetch(`/api/v1/my-data`, {
+    const response = await fetch(`/my-data`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json'
@@ -107,7 +107,7 @@ class MyService {
 
     async queryData(query) {
       const response = await this.requestManager.request({
-        url: `/api/v1/my-data`,
+        url: `/my-data`,
         method: 'POST',
         headers: {
           'content-type': 'application/json'
@@ -119,7 +119,7 @@ class MyService {
 }
 ```
 
-Note, the above is the 1:1 convertion to keep things "exactly" as they were in your app, and as
+Note, the above is the 1:1 conversion to keep things "exactly" as they were in your app, and as
 it stands it already provides huge albeit hidden value. Below we will unpack that value and
 then begin to iteratively migrate to unlock even more value.
 
@@ -364,7 +364,7 @@ to do.
 
 The developer also now gets direct access to the response of the request, which gives them access
 to the wired in AbortController, additional request and response information, and the ability
-to stream the response if they choose. Our wrapper while useful was previously discarding the capabilities from being accessible to the developer. "Use the platform" has a friend: "Use the framework". These things feel invisible, but they are there ready for when they are needed, no workarounds necesssary.
+to stream the response if they choose. Our wrapper while useful was previously discarding the capabilities from being accessible to the developer. "Use the platform" has a friend: "Use the framework". These things feel invisible, but they are there ready for when they are needed, no workarounds necessary.
 
 ### Incrementally Migrating With Builders
 
@@ -375,11 +375,11 @@ Finally, we've now introduced a very nifty refactoring nicety. When we had our c
 3. We could have added an additional method name. E.g. `queryDataV2`.
 
 The trouble with (1) is it carries inherent risk for anything but small apps. The trouble with (2) is that you quickly grow the cognitive and implementation complexity of your method.
-The trouble with (3) is that if you don't choose a good name, you introduce even more cognitive complexity, and even if you do choose a good name the odds are that the original method name is both easier to remember, faster to autocomplete, and inuitively preferred.
+The trouble with (3) is that if you don't choose a good name, you introduce even more cognitive complexity, and even if you do choose a good name the odds are that the original method name is both easier to remember, faster to autocomplete, and intuitively preferred.
 
 We've all been there with (3). Naming things is hard, and teaching folks to migrate their habits is too.
 
-The neat thing about RequestManager is that its a simple chain-of-command executor. It doesn't care much about what your requests are, just that it can execute them. It is *interface* driven instead of imperitive. Thus we remove the complexity attatched to the method name and signature, replacing it instead with an interface that rarely if ever will change.
+The neat thing about RequestManager is that its a simple chain-of-command executor. It doesn't care much about what your requests are, just that it can execute them. It is *interface* driven instead of imperative. Thus we remove the complexity attached to the method name and signature, replacing it instead with an interface that rarely if ever will change.
 
 Which means our refactor now still take three forms but the change looks different.
 
@@ -449,7 +449,7 @@ export function queryData(query, resourcePath) {
 > Note: the signature of what is passed to buildBaseURL is simpler above than in the current
 > EmberData 5.3 release, and reflects updates that relaxed the signature which will be in 5.4
 
-Awesome! Now we are ready for deployment to CDNs! Or maybe your application is single-tentant
+Awesome! Now we are ready for deployment to CDNs! Or maybe your application is single-tenant
 and has a per-customer api domain that needs to be configured globally, easy-peasy. This can all be handled without the product code needing to be changed or consider it.
 
 Now let's say we want this request builder to build requests that are *also* able to be cached when using EmberData's CacheHandler?
@@ -502,7 +502,7 @@ Builders and RequestManager are but the first stepping stone in what promises to
 
 We see the future as one that is schema and spec driven. Specs describe API endpoints and explain how they operate on the resources your schemas describe. This information then feeds
 into tooling to automatically produce your API mocks for tests, eliminates Models, provides
-strong end-to-end typeing guarantees, and allows lint and runtime verification of query validity.
+strong end-to-end typing guarantees, and allows lint and runtime verification of query validity.
 
 All this to say, we think builders will end up a typechecked, typed response thing that for
 most apps looks a bit like this for the example we've been using.
