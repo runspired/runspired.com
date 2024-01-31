@@ -86,7 +86,7 @@ I will sum up: convert this:
 ```ts
 class MyService {
   async queryData(query) {
-    const response = await fetch(`/my-data`, {
+    const response = await fetch(`/api/v1/my-data`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json'
@@ -107,7 +107,7 @@ class MyService {
 
     async queryData(query) {
       const response = await this.requestManager.request({
-        url: `/my-data`,
+        url: `/api/v1/my-data`,
         method: 'POST',
         headers: {
           'content-type': 'application/json'
