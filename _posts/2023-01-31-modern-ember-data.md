@@ -465,7 +465,7 @@ export function queryData(query, resourcePath) {
     const key = `${url}?${buildQueryParams(queryData)}`;
 
     return {
-        url: ,
+        url,
         op: 'query',
         identifier: { type: resourcePath },
         cacheOptions: { key },
@@ -520,7 +520,7 @@ export function queryData(query, resourcePath) {
 +    const key = `[JSON:API]${url}?${buildQueryParams(queryData)}`;
 
     return {
-        url: ,
+        url,
         op: 'query',
         identifier: { type: resourcePath },
         cacheOptions: { key },
