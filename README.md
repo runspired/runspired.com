@@ -1,5 +1,3 @@
-# @runspired
-
 ```ts
 type Author = {
     name: 'Chris Thoburn';
