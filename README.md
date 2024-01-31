@@ -8,6 +8,8 @@ type Author = {
 };
 ```
 
+## Posts
+
 <ul>
   {% for post in site.posts %}
     <li>
