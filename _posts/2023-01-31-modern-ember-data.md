@@ -599,11 +599,13 @@ class Route {
 
 ### Where To From Here?
 
-Builders and RequestManager are but the first stepping stone in what promises to be a big evolution in how you manage querying data in our application.
+Builders and RequestManager are but the first stepping stone in what promises to be a big evolution in how you manage querying and mutating data in your application.
 
 We see the future as one that is schema and spec driven. Specs describe API endpoints and explain how they operate on the resources your schemas describe. This information then feeds
 into tooling to automatically produce your API mocks for tests, eliminates Models, provides
 strong end-to-end typing guarantees, and allows lint and runtime verification of query validity.
+
+The hints of this are already throughought the EmberData codebase. Alpha versions of ideas like the request mocking library (which can do things no other mocking library does due to RequestManager) are under construction and even being used by the library's own test suite to dogfood their development.
 
 All this to say, we think builders will end up a typechecked, typed response thing that for
 most apps looks a bit like this for the example we've been using.
@@ -640,3 +642,5 @@ class Route {
     }
 }
 ```
+
+With benefits that stretch for miles beyond the simplicity of the interface.
