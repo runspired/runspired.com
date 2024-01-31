@@ -298,7 +298,7 @@ class MyService {
 
 At which point we realize this custom fetch-wrapping service is no longer useful.
 
-Let's deleting it and use RequestManager directly.
+Let's delete it and use RequestManager directly.
 
 ```diff
 +import { queryData } from './builders';
@@ -375,7 +375,7 @@ Finally, we've now introduced a very nifty refactoring nicety. When we had our c
 3. We could have added an additional method name. E.g. `queryDataV2`.
 
 The trouble with (1) is it carries inherent risk for anything but small apps. The trouble with (2) is that you quickly grow the cognitive and implementation complexity of your method.
-The trouble with (3) is that if you don't choose a good name, you introduce even more cognitive complexity, and even if you do choose a good name the odds are that the original method name is both easier to remember, faster to autocomplete, and inuitively preferred.
+The trouble with (3) is that if you don't choose a good name, you introduce even more cognitive complexity, and even if you do choose a good name the odds are that the original method name is both easier to remember, faster to autocomplete, and intuitively preferred.
 
 We've all been there with (3). Naming things is hard, and teaching folks to migrate their habits is too.
 
@@ -483,7 +483,7 @@ export function queryData(query, resourcePath) {
 Ok so what all did we do here?
 
 First, we add `op: 'query'`, which is a hint to the CacheHandler about how to treat this request. Then we added `identifier: { type: resourcePath },` which will hint to it the
-primary resource type this request pertains to, which is useful for many cache invalidation strategies. There's additional properties that may be added if desired for that reason, I won't go into the all here.
+primary resource type this request pertains to, which is useful for many cache invalidation strategies. There's additional properties that may be added if desired for that reason, I won't go into them all here.
 
 Finally, we activated caching and told it the key to use. This was important because by default the CacheHandler will only cache GET requests with a url by their url, but we want
 to use POST as QUERY here. If we blindly used the URL we would have a bug in our application.
@@ -495,6 +495,107 @@ In case you didn't know `JSON.stringify({ a: '1', b: '2' })` is not the same as 
 What if you don't want to trust serializing the query like this to get a cache key? Use any string key you would like, just make sure that its uniqueness validly describes the query.
 
 The reasons for why this is so important will go into my next post which will dive into caching.
+
+#### Migrations That Affect Product
+
+Lets say we wanted to change our API from using ActiveModel to using JSON:API as its format. The response in both cases in JSON but the shape is very different. How would
+we handle this with builders? For this exercise, lets assume the API version stays the
+same and the new format is controlled by JSON:API's expected header.
+
+> Note: We are glossing over that JSON:API doesn't have a post-as-query capability in
+> the spec, most real-world implementations still implement it. Here we care only about
+> updating headers to get the new API response format, no other changes in API semantics.
+
+For this I would write a new builder. I would start by copying the original, and then
+adjust the headers as desired. I would also account for the format in the cache-key
+because its something that affects the response but is not captured by the URL itself.
+
+```diff
+import { buildBaseURL, buildQueryParams } from '@ember-data/request-utils';
+
+export function queryData(query, resourcePath) {
+    const url = buildBaseURL({ resourcePath });
+    const queryData = structuredClone(query);
+-    const key = `${url}?${buildQueryParams(queryData)}`;
++    const key = `[JSON:API]${url}?${buildQueryParams(queryData)}`;
+
+    return {
+        url: ,
+        op: 'query',
+        identifier: { type: resourcePath },
+        cacheOptions: { key },
+        method: 'POST',
+        headers: {
++            'Accepts': 'application/vnd.api+json',
+-            'Content-Type': 'application/json'
++            'Content-Type': 'application/vnd.api+json'
+        },
+        body: JSON.stringify(query)
+    }
+}
+```
+
+Now lets migrate our product code usage:
+
+```diff
+-import { dataQuery } from './builders';
++import { dataQuery } from './builders-v2';
+
+class Route {
+    @service requestManager;
+
+    async model({ search, offset }) {
+        const query = dataQuery({
+            search,
+            sort: 'name:asc',
+            limit: 50,
+            offset: Number(offset)
+        }, 'my-data');
+        const result = await this.requestManager.request(query);
+
+        return {
+            search,
+            offset,
+            data: result.content
+        };
+    }
+}
+```
+
+Obviously we will then need to make additional changes to our code to account for the changed json shape, but our request code is stable, our migration state is easy to statically analyze, and our brain doesn't hate any weirdly named methods.
+
+Of note: if you were using EmberData's Store here and not just the RequestManager, you
+wouldn't even need to migrate code using `result.content` as that would already be
+record instances!
+
+The only difference in code to have seamlessly absorbed such a major migration would be this!
+
+```diff
+import { dataQuery } from './builders-v2';
+
+class Route {
+-    @service requestManager;
++    @service store;
+
+    async model({ search, offset }) {
+        const query = dataQuery({
+            search,
+            sort: 'name:asc',
+            limit: 50,
+            offset: Number(offset)
+        }, 'my-data');
+-        const result = await this.requestManager.request(query);
++        const result = await this.store.request(query);
+
+        return {
+            search,
+            offset,
+            data: result.content
+        };
+    }
+}
+```
+
 
 ### Where To From Here?
 
