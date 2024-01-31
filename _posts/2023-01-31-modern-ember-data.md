@@ -130,7 +130,7 @@ But as we discussed in the last section, EmberData is now a *request centric* li
 extent to which this is true goes far beyond just porting the requests that EmberData used to make magically via adapters into the new paradigm.
 
 If you are doubting right now how EmberData being *request centric* means you should use it
-for all your requests then first, I applaud you for your skepticism. Its invaluable to 
+for all your requests then first, I applaud you for your skepticism. It is invaluable to 
 critically analyze the claims a library (or its author) makes.
 
 Second, I feel you. 18 years of doing things one way is a *lot* of history, built context
@@ -170,7 +170,7 @@ First, by unifying on the platform, it was quick to convert our standard fetch r
 
 Second, we gained all the functionality of whatever handlers we registered for use. Most commonly, this will be the [Fetch Handler](https://github.com/emberjs/data/blob/5a48f52a08587e59cb529575577880daf678ae00/packages/request/src/fetch.ts).
 
-This means that immediately our code example started handling a number of scenarios that it didn't before, despite no seeming change. Let's unpack what we get that we didn't have before. In no particular order:
+This means that immediately our code example started handling a number of scenarios that it didn't before, despite no seeming change. Lets unpack what we get that we didn't have before. In no particular order:
 
 - The fetch code is SSR ready
 - We account for libraries like mirage that will try to dynamically swap out `fetch` for its own version
@@ -194,12 +194,12 @@ And third, we gained expectations of behavior.
 Everything that the Fetch handler does is something every developer 
 otherwise must do each time individually. But often in the interests of time, terseness, overconfidence in network stability, or due to lack of awareness these things will not be done.
 
-The value of an abstraction like EmberData is that its able to reduce cognitive and implementation burden on product engineers for these sorts
+The value of an abstraction like EmberData is that it is able to reduce cognitive and implementation burden on product engineers for these sorts
 of considerations, in many cases eliminating that burden entirely.
 
 Whether or not you use EmberData to manage your requests doesn't change the fact that *they need managed*. Even just a single, relatively simple request has this need.
 
-But the value doesn't end here. Let's take our migration further
+But the value doesn't end here. Lets take our migration further
 
 ### Taking our Migration Even Further
 
@@ -253,7 +253,7 @@ This service is doing three things for us:
 2. generating the fetch options
 3. ensuring a json response
 
-Let's start by refactoring it to make use of the RequestManager's encouraged
+Lets start by refactoring it to make use of the RequestManager's encouraged
 pattern of builders and handlers.
 
 > Builders setup requests, they are functions that may understand the app state and context in which a request is being generated
@@ -262,7 +262,7 @@ pattern of builders and handlers.
 
 In our current service, everything within the call to `request` is something that is immediately a candidate for a builder or a handler.
 
-Let's write just a builder for today. Generally we name builders to follow the natural
+Lets write just a builder for today. Generally we name builders to follow the natural
 meaning of what the request being constructed is intended to do.
 
 ```ts
@@ -298,7 +298,7 @@ class MyService {
 
 At which point we realize this custom fetch-wrapping service is no longer useful.
 
-Let's delete it and use RequestManager directly.
+Lets delete it and use RequestManager directly.
 
 ```diff
 +import { queryData } from './builders';
@@ -381,7 +381,7 @@ We've all been there with (3). Naming things is hard, and teaching folks to migr
 
 The neat thing about RequestManager is that its a simple chain-of-command executor. It doesn't care much about what your requests are, just that it can execute them. It is *interface* driven instead of imperative. Thus we remove the complexity attached to the method name and signature, replacing it instead with an interface that rarely if ever will change.
 
-Which means our refactor now still take three forms but the change looks different.
+Which means our refactor still may take three forms, but the change looks different.
 
 1. We could update the existing builder to migrate all requests simultaneously
 2. We could change the builder signature to have an options argument to which we pass the version
@@ -389,9 +389,9 @@ Which means our refactor now still take three forms but the change looks differe
 
 Which answer is best for you will vary. In my app at work I have three API migrations planned for the year that utilize builders in their migration strategy.
 
-The first will migrate all requests simultaneously. It's simply updating underlying format in a way that won't be product affecting.
+The first will migrate all requests simultaneously. It is simply updating the underlying format in a way that won't be product affecting.
 
-The second will migrate requests incrementally to a new format, it's updating the underlying transfer format in a way that affects product code, but not changing the overall semantics of the API. For this I've considered passing in an option to the builder, but I'm more likely to take the new-builder approach as it makes tracking the status of the incremental migration via static analysis much easier. Either approach is very valid.
+The second will migrate requests incrementally to a new format, it is updating the underlying transfer format in a way that affects product code, but not changing the overall semantics of the API. For this I have considered passing in an option to the builder, but I am more likely to take the new-builder approach as it makes tracking the status of the incremental migration with static analysis much easier. Either approach is very valid.
 
 The third will migrate requests to a new API version that changes semantics significantly. This is a high risk migration, and so I will use a completely new builder.
 
@@ -413,9 +413,9 @@ export function queryData(query, resourcePath) {
 ```
 
 The first thing we probably want to do is have our builder respect a configurable default host
-and namespace. This prepares us for our site and API not being on the same domain (a decision you don't want to have to piecemeal figure out how to account for later).
+and namespace. This prepares us for our site and API not being on the same domain (a decision you do not want to have to piecemeal figure out how to account for later).
 
-EmberData provides users a global config mechanism for host and namespace. Typically you'll want to do this either in your store file or app file.
+EmberData provides users a global config mechanism for host and namespace. Typically you will want to do this either in your store file or app file.
 
 ```ts
 import { setBuildURLConfig } from '@ember-data/request-utils';
@@ -452,9 +452,9 @@ export function queryData(query, resourcePath) {
 Awesome! Now we are ready for deployment to CDNs! Or maybe your application is single-tenant
 and has a per-customer api domain that needs to be configured globally, easy-peasy. This can all be handled without the product code needing to be changed or consider it.
 
-Now let's say we want this request builder to build requests that are *also* able to be cached when using EmberData's CacheHandler?
+Now lets say we want this request builder to build requests that are *also* able to be cached when using EmberData's CacheHandler?
 
-For that, we need a cacheKey, and for good measure an op-code (some op-codes are special, this one isn't, but I'll explain more about op-codes in another post) as well as an identifier.
+For that, we need a cacheKey, and for good measure an op-code (some op-codes are special –this one is not– but I will explain more about op-codes in another post) as well as an identifier.
 
 ```ts
 import { buildBaseURL, buildQueryParams } from '@ember-data/request-utils';
@@ -483,7 +483,7 @@ export function queryData(query, resourcePath) {
 Ok so what all did we do here?
 
 First, we add `op: 'query'`, which is a hint to the CacheHandler about how to treat this request. Then we added `identifier: { type: resourcePath },` which will hint to it the
-primary resource type this request pertains to, which is useful for many cache invalidation strategies. There's additional properties that may be added if desired for that reason, I won't go into them all here.
+primary resource type this request pertains to, which is useful for many cache invalidation strategies. There are additional properties that may be added if desired for that reason, I won't go into them all here.
 
 Finally, we activated caching and told it the key to use. This was important because by default the CacheHandler will only cache GET requests with a url by their url, but we want
 to use POST as QUERY here. If we blindly used the URL we would have a bug in our application.
@@ -508,7 +508,7 @@ same and the new format is controlled by JSON:API's expected header.
 
 For this I would write a new builder. I would start by copying the original, and then
 adjust the headers as desired. I would also account for the format in the cache-key
-because its something that affects the response but is not captured by the URL itself.
+because it is something that affects the response but is not captured by the URL itself.
 
 ```diff
 import { buildBaseURL, buildQueryParams } from '@ember-data/request-utils';
@@ -565,7 +565,7 @@ class Route {
 Obviously we will then need to make additional changes to our code to account for the changed json shape, but our request code is stable, our migration state is easy to statically analyze, and our brain doesn't hate any weirdly named methods.
 
 Of note: if you were using EmberData's Store here and not just the RequestManager, you
-wouldn't even need to migrate code using `result.content` as that would already be
+would not need to migrate code using `result.content` as that would already be
 record instances!
 
 The only difference in code to have seamlessly absorbed such a major migration would be this!
