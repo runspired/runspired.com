@@ -133,15 +133,15 @@ If you are doubting right now how EmberData being *request centric* means you sh
 for all your requests then first, I applaud you for your skepticism. Its invaluable to 
 critically analyze the claims a library (or its author) makes.
 
-Second, I feel you. 18 years of doing things one way is a *lot* of built of history and 
-context and emotions to suddenly toss away. But before you head over to my threads account 
+Second, I feel you. 18 years of doing things one way is a *lot* of history, built context
+and emotions to suddenly toss away. But before you head over to my threads account 
 to drag me for how bad a take this is, hear me out. Then please do so at your earliest 
 convenience.
 
-And finally, you probably fall into one of two camps:
+You probably fall into one of two camps:
 
-  1. you use EmberData but you have requests for which you do not use it. If this is you then probably you are more willing to hear me out.
-  2. you don't use EmberData – perhaps because you ripped it out of your app in a burning fit of passion, and you have no idea outside of either sick revenge or disaster porn why you are reading this post ... I don't know either but I hope you keep reading ... –  
+  1. You use EmberData but you have requests for which you do not use it. If this is you then probably you are more willing to hear me out.
+  2. You don't use EmberData – perhaps because you ripped it out of your app in a burning fit of passion, and you have no idea outside of either sick revenge or disaster porn why you are reading this post ... I don't know either but I hope you keep reading ... –  
 
 Those of you in the first camp, this will probably be an easier sell: you can drop usage of ember-ajax, jquery.ajax, ember-fetch and probably a dozen homegrown internal things you have and instead use a nice uniform interface for managing all manner of requests. I know that doesn't sway your skepticism that this is possible, but hopefully its at least a small carrot.
 
