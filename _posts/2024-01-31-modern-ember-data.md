@@ -18,7 +18,7 @@ of sight.
 
 In this post, I want to walk through one of the key changes that comes with RequestManager
 that highlights the advantages of the changing architecture, as well as tease a bit of what
-is still to come: **All requests should use EmberData**
+is still to come: **All requests should use EmberData.**
 
 But first, a short overview of the shift to RequestManager.
 
@@ -79,7 +79,7 @@ Ok, so how does this new API change how we build our applications?
 >
 > Person 2: Explain...
 
-I will sum up: convert this:
+I will sum up. Convert this:
 
 ```ts
 class MyService {
@@ -132,18 +132,18 @@ for all your requests then first, I applaud you for your skepticism. It is inval
 critically analyze the claims a library (or its author) makes.
 
 Second, I feel you. 18 years of doing things one way is a *lot* of history, built context
-and emotions to suddenly toss away. But before you head over to my threads account 
+and emotions to suddenly toss away. But before you head over to my [threads](https://www.threads.net/@runspired/) account 
 to drag me for how bad a take this is, hear me out. Then please do so at your earliest 
 convenience.
 
 You probably fall into one of two camps:
 
   1. You use EmberData but you have requests for which you do not use it. If this is you then probably you are more willing to hear me out.
-  2. You don't use EmberData – perhaps because you ripped it out of your app in a burning fit of passion, and you have no idea outside of either sick revenge or disaster porn why you are reading this post ... I don't know either but I hope you keep reading ... –  
+  2. You don't use EmberData – perhaps because you ripped it out of your app in a burning fit of passion, and you have no idea outside of either sick revenge or disaster porn why you are reading this post ... I don't know either but I hope you keep reading ... 
 
 Those of you in the first camp, this will probably be an easier sell: you can drop usage of ember-ajax, jquery.ajax, ember-fetch and probably a dozen homegrown internal things you have and instead use a nice uniform interface for managing all manner of requests. I know that doesn't sway your skepticism that this is possible, but hopefully its at least a small carrot.
 
-**But WHYyyyyyy**
+***But WHYyyyyyy?***
 
 ### Lets start with what you gained in this simple migration
 
@@ -197,7 +197,7 @@ of considerations, in many cases eliminating that burden entirely.
 
 Whether or not you use EmberData to manage your requests doesn't change the fact that *they need managed*. Even just a single, relatively simple request has this need.
 
-But the value doesn't end here. Lets take our migration further
+But the value doesn't end here. Lets take our migration further.
 
 ### Taking our Migration Even Further
 
@@ -325,6 +325,7 @@ class Route {
         };
     }
 }
+
 ```
 
 Which results in:
@@ -530,7 +531,7 @@ export function queryData(query, resourcePath) {
         },
         body: JSON.stringify(query)
     }
-}
+ }
 ```
 
 Now lets migrate our product code usage:
