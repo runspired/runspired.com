@@ -324,8 +324,7 @@ class Route {
 +            data: result.content
         };
     }
-}
-
+ }
 ```
 
 Which results in:
@@ -558,7 +557,7 @@ class Route {
             data: result.content
         };
     }
-}
+ }
 ```
 
 Obviously we will then need to make additional changes to our code to account for the changed json shape, but our request code is stable, our migration state is easy to statically analyze, and our brain doesn't hate any weirdly named methods.
@@ -592,7 +591,7 @@ class Route {
             data: result.content
         };
     }
-}
+ }
 ```
 
 
