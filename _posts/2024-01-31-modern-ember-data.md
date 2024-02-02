@@ -488,9 +488,9 @@ to use POST as QUERY here. If we blindly used the URL we would have a bug in our
 
 So we serialize the query to be part of the cache-key, and we do this using the `buildQueryParams` utility. This utility performs a bit of wizardy to produce a stable key.
 
-In case you didn't know `JSON.stringify({ a: '1', b: '2' })` is not the same as `JSON.stringify({ b: '2', a: '1' })`. Key insertion order is respected during JSON serialization. However, this is rarely useful for creating a cache key because objects are often dynamically generated. What we care about is whether they have a (deep) equivalent value, which this function helps us to achieve in more cases. Yet another thing where an annoying and complicated problem vanishes with a good framework and good infra.
+In case you didn't know `JSON.stringify({ a: '1', b: '2' })` is not the same as `JSON.stringify({ b: '2', a: '1' })`. Key insertion order is respected during JSON serialization. However, this is rarely useful for creating a cache-key because objects are often dynamically generated. What we care about is whether they have a (deep) equivalent value, which this function helps us to achieve in more cases. Yet another thing where an annoying and complicated problem vanishes with a good framework and good infra.
 
-What if you don't want to trust serializing the query like this to get a cache key? Use any string key you would like, just make sure that its uniqueness validly describes the query.
+What if you don't want to trust serializing the query like this to get a cache-key? Use any string key you would like, just make sure that its uniqueness validly describes the query.
 
 The reasons for why this is so important will go into my next post which will dive into caching.
 

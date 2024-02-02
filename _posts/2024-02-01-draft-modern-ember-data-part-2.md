@@ -1,12 +1,12 @@
 ---
-title: Not Your Parent's EmberData (part 2)
+title: [DRAFT] Not Your Parent's EmberData (part 2)
 published: true
 ---
 
 > **warning**
 > This blog post is currently a **DRAFT**
 
-# Not Your Parent's EmberData (part 2)
+# [DRAFT] Not Your Parent's EmberData (part 2)
 
 > This is Part 2 of a series exploring architectural decisions within EmberData. If you haven't read [Part 1](./2024-01-31-modern-ember-data.md), you should read that first.
 
@@ -28,20 +28,17 @@ not powerful enough, not flexible enough, or not composable enough to support th
 
 I mentioned in Part 1 that the redesign of EmberData really began in earnest with changes to the cache. In particular, the introduction of Identifiers ([RFC#403](https://rfcs.emberjs.com/id/0403-ember-data-identifiers/)).
 
-In order to safely and accurately maintain a cache, you need to be able to safely and 
-accurately determine cache keys for the content the goes into that cache. In the case 
-of a library like EmberData, that need extends beyond a simple mapping between a key
-and some resource data.
+In order to safely and accurately maintain a cache, you need to be able to consistently 
+and accurately determine identity (cache-keys) for the content the goes into that cache.
+In the case of a library like EmberData, that need extends beyond a simple mapping
+between a key and its associated resource data.
 
-A good example of where being able to work safely via identity alone (without any 
-associated resource data) is important is relationships.
+Relationships are one example of this need. Relationships are links between two potential
+cache-keys. Either or both sides of the relationship may not have loaded resource data 
+yet, and so we need to trust that we have a cache-key that correctly points to where that 
+data would be placed in the future.
 
-Relationships are links between two potential cache keys. Either or both sides of the 
-relationship may not have loaded resource data yet, and so we need to trust that we 
-have a cache-key that correctly points to where that data would be placed in the 
-future.
-
-We also have to be able to store relationship information we receive from other 
+We also have to be able to store any relationship information we receive from other 
 resources for a resource that has not been loaded yet key'd to the same cache-key.
 
 EmberData being very good at this cache-key management for graphs of resources has
@@ -50,21 +47,21 @@ seamlessly merge together the data from multiple requests, and allows it to quic
 ensure that wherever the same resource is referenced the same object reference is handed
 out to you.
 
-It is even at the heart of how structural polymorphism works in EmberData, 
-as ultimately polymorphism is one resource that acts as though it has multiple 
-identities but has only one true cache-key.
+It is even at the heart of how structural polymorphism works in EmberData. In a basic 
+sense, polymorphism is when one resource might acts as though it has multiple identities,
+but has only one true cache-key. 
 
-I'll dive more into how the Graph and Polymorphism each works in future posts.
+I'll dive more into how the Graph and Polymorphism each works with identity in future posts.
 
 In this post, I want to explain one thing we got *wrong* with resource identity in the
 many years before RequestManager, and how RequestManager not only fixes that mistake but
-in doing so increases the reliability of the cache.
+in doing so improves the reliability of the cache.
 
 ## Until RequestManager, the Resource CacheKey was the Request CacheKey.
 
-A key insight into both the development of Identifiers *and* the development of 
-RequestManager was that to be *powerful*, *flexible* and *composable* our core
-architecture needed to be *lossless* about how it handled your data.
+A key insight in the development of both Identifiers *and* the RequestManager was that
+to be *powerful*, *flexible* and *composable* our core architecture needed to be 
+*lossless* about how it handled data it received.
 
 It is always ok for a developer to decide that certain information is not relevant to
 what they need from request. For instance, response headers, or extra top-level meta 
@@ -76,9 +73,9 @@ from the response, and the rest of it is discarded. Then the resources are extra
 from the body, and anything that is not a resource is discarded.
 
 Even assuming that there is no loss to individual resource data (hint, there often is 
-in this design), this *loses* tons of valuable information the request contains. Not 
-just headers, but meta, which associations were included, and what order they were 
-returned in are all among the pieces of information discarded.
+in this design), this *loses* tons of valuable information the request contains: headers, 
+meta, order, and which associations were included are all among the pieces of information
+discarded.
 
 Fundamentally, being lossy was what was wrong with this core EmberData API the most:
 
@@ -88,10 +85,11 @@ class Store {
 }
 ```
 
-`findRecord` is lossy because we have no idea whether we resolved from cache or 
+`findRecord` is a lossy API because we have no idea whether we resolved from cache or 
 network, and no access any returned information that wasn't on the resource.
 
-As a design principle, ***lossless* applies equally to the intent of a request as it does to specific handling of the information received from your API.**
+Moreover, as a design principle, ***lossless* applies equally to the intent of a request
+as it does to specific handling of the information received from your API.**
 
 ### Lossless Intent
 
@@ -103,9 +101,9 @@ const user = await store.findRecord('user', '1', {
 });
 ```
 
-While not immediately evident, this example highlights the mistake in the older 
-*resource centric* design and is one of many reasons why lossy APIs are being phased
-out of EmberData.
+While not immediately evident, this example highlights the mistake made in handling
+identity by the older *resource centric* design and is one of many reasons why lossy
+APIs are being phased out of EmberData.
 
 To the reader, the intent of this request might seem to be clear: "fetch the user
 resource with ID 1 and make sure to also fetch that user's friends, company and pets".
@@ -118,7 +116,7 @@ go like this:
 3. if so, resolve the resource from the cache. If not, fetch the resource.
 4. return the record for this resource
 
-Did you catch the mistake?
+*Did you catch the mistake?*
 
 In the *resource centric* world the resource cache-key is the same as the request
 cache-key. Information like `include` isn't part of the cache-key determination.
@@ -139,22 +137,23 @@ interface Adapter {
 It has always been possible albeit extremely unergonomic for an application to implement
 `shouldReloadRecord` and `shouldBackgroundReloadRecord` in a way that would have taken into
 account additional information like includes. But it solves *only* findRecord and not 
-relationship or query requests, and it only solves them for a very narrow view of what and how
-someone might want to issue a request.
+relationship or query requests, and it only solves them for a very narrow view of what
+and how someone might want to issue a request.
 
 More importantly, it means that there is nothing EmberData could do to more generally handle
 requests efficiently. Without a cache-key, there is no request de-duping, no request updating,
-no request caching. The list goes on and on.
+no request caching. The list goes on and on, and we will dive into some of the upcoming features
+of EmberData latter in this post that are unlocked by fixing this mistake.
 
 So even while for many requests the cache-key for the resource and the cache-key for the request
 to get that resource might be 1:1, the inumerable scenarios where this is not the case meant
-that combining these things leads to an untrusty cache.
+that combining these things leads to an untrusted cache.
 
-With the above call to `findRecord`, were we to resolve from cache there is no guarantee that
-the requested includes are also available. Loss of intent immediately results in a loss of 
-trust.
+To recap: with the above call to `findRecord`, if we were to resolve from cache there is no
+guarantee that the requested includes are also available. Loss of intent immediately results in 
+a loss of trust.
 
-The solution for many apps was `reload`.
+The solution for many apps has been `reload`.
 
 ```ts
 const user = await store.findRecord(
@@ -167,7 +166,7 @@ const user = await store.findRecord(
 `reload: true` is a poison pill in apps. Once you need it, you start needing it everywhere.
 There's still value in a cache even when you trust the cache so little that every request is
 sent to network like this results in, which is perhaps its own intersting blog post sometime
-to delve into, but suffice it to say wow. What a failure of expectations of a library.
+to delve into, but suffice it to say this greatly diminishes the value of using the library.
 
 These shortcomings are why the `query` and `queryRecord` methods on store **always** hit 
 network. Without a cache-key for the request and a request cache using it there's no ability
@@ -177,7 +176,7 @@ the store should just do for you. **And now it does!**
 
 So Now What?
 
-## Request Cache Keys
+## Request Cache-Keys
 
 In Part 1 we worked on this builder:
 
@@ -208,16 +207,35 @@ use to help manage cache lifetimes, and that we would use the `key` set on `cach
 as the key for the request.
 
 When using store's CacheHandler, if no `cacheOptions.key` is present AND the request is a GET
-request and has a URL, the URL will be used as the cache key. Using the url as the cache-key
+request and has a URL, the URL will be used as the cache-key. Using the url as the cache-key
 in this way is powerful, because not only is it *usually* 1:1 with a request, it also *usually*
 captures all the state necessary to consider whether two requests are the same. By embracing
 the URL, urls used for relationships and pagination become first class mechanisms of identity
 capable of driving powerful features EmberData was missing before.
 
 There are of course always exceptions though and this is why request identity is designed to
-be very flexible. In addition to `cacheOptions.key` and the abstraction that builders provide
+be flexible. In addition to `cacheOptions.key` and the abstraction that builders provide
 for auto-generating cache-keys, EmberData provides a configuration hook for advanced use cases
 I won't get into here that enables configuration of how EmberData looks to determine identity
 in a request by default.
 
-What does this key get us out-of-the-box?
+A final note before we dive into how this key gets used: EmberData considers the identity of
+the request to be the same as the identity of the document (the response body) that request
+results in. This is useful to be aware of because some API designs allow such documents to
+be embedded within the response of a different request.
+
+For example, in JSON:API, if a resource relationship specifies a "self" link, that self link
+is a url that would have produced exactly the same response body as the resource relationship
+object. This means a cache could use that information to update existing requests or use new
+requests to update existing relationships even without necessarily knowing the exact resource
+that relationship is attached to, or ever loading it.
+
+Alright, so thats what request cache-keys are, so what all does this key do?
+
+### How Request Cache-Keys are Used
+
+
+
+### Creating Effective Request Cache-Keys
+
+### Where To From Here?
