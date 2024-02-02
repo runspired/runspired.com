@@ -1,7 +1,10 @@
 ---
 title: Not Your Parent's EmberData (part 2)
-published: false
+published: true
 ---
+
+> **warning**
+> This blog post is currently a **DRAFT**
 
 # Not Your Parent's EmberData (part 2)
 
