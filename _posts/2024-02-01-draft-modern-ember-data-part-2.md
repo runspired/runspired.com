@@ -8,25 +8,77 @@ published: true
 
 # [DRAFT] Not Your Parent's EmberData (part 2)
 
-> This is Part 2 of a series exploring architectural decisions within EmberData. If you haven't read [Part 1](./2024-01-31-modern-ember-data.md), you should read that first.
+> This is Part 2 of a series exploring architectural decisions within EmberData. If you
+> haven't read [Part 1](./2024-01-31-modern-ember-data.md), you should read that first.
 
 So every request should be handled by EmberData. Now what?
 
-The RequestManager shifted interaction with EmberData from being *resource centric* to being *request centric*. However, this does
-not mean that EmberData stopped caring about resources. Far from it.
+The RequestManager shifted interaction with EmberData from being *resource centric* to
+being *request centric*. However, this does not mean that EmberData stopped caring about
+resources. Far from it.
 
 The way to think about this shift is "yes, and".
 
 Does EmberData still care about resources? Yes, and it now cares about requests.
 
-Does EmberData still allow you to model those resources? Yes, and it provides greater flexibility now in how to do so.
+Does EmberData still allow you to model those resources? Yes, and it provides greater
+flexibility now in how to do so.
 
-Our goal with this architectural change was to unlock power, flexibility and composability. That goal is not achievable if the result is somehow
-not powerful enough, not flexible enough, or not composable enough to support the historical feature set.
+Our goal with this architectural change was to unlock power, flexibility and composability.
+That goal is not achievable if the result is somehow not powerful enough, not flexible
+enough, or not composable enough to support the historical feature set.
+
+In this post, we're going to dive into several key differences in behavior and reliability
 
 ## Data Integrity
 
-I mentioned in Part 1 that the redesign of EmberData really began in earnest with changes to the cache. In particular, the introduction of Identifiers ([RFC#403](https://rfcs.emberjs.com/id/0403-ember-data-identifiers/)).
+I mentioned in Part 1 that the redesign of EmberData really began in earnest with changes
+to the cache. In particular, the introduction of Identifiers ([RFC#403](https://rfcs.emberjs.com/id/0403-ember-data-identifiers/)).
+
+Identifiers are objects containing a property with a value that is a globally unique
+string used to address a resource, document or request. (Note: request identity and document
+identity are 1:1).
+
+```ts
+interface Identifier {
+    lid: string; // the value of lid is globally unique
+}
+```
+
+For a given `lid` and store instance, the object wrapper around the `lid` is given a
+guarantee of stability. What this allows is for identities to serve as keys in any form
+of storage: `Map` or `Set` (which allow objects or string keys) as well as `WeakMap`,
+`WeakSet` and `WeakRef` which only allow object keys. This stability is managed by
+the IdentifierCache.
+
+Unlike most things in the cache, and even though they *look* like JSON:API resource
+identifiers, identifiers are the only cache data that doesn't come directly from your
+API. Instead, raw data in the form of resources or requests is presented to the
+IdentifierCache to identify. If the data's identity is not already known, the cache
+utilizes user supplied hooks to generate the appropriate identity.
+
+It is this design decision that allows EmberData to work with any data format.
+The hooks have defaults that work well enough in the general case that few folks have
+ever needed to implement them, but if you were implementing your own cache and your
+cache data format weren't JSON:API, it is likely you would want to configure these.
+
+For instance, if your resources used `urn` as their primary key instead of JSON:API's
+compound key (`id` and `type`) you might implement the hook like so:
+
+```ts
+import { setIdentifierGenerationMethod } from '@ember-data/store';
+
+setIdentifierGenerationMethod((data, bucket) => {
+    switch (bucket) {
+        case 'record':
+            return data.urn;
+        case 'document':
+            // handle requests
+    }
+});
+```
+
+
 
 In order to safely and accurately maintain a cache, you need to be able to consistently 
 and accurately determine identity (cache-keys) for the content the goes into that cache.
