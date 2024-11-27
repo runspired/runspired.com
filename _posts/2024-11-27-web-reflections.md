@@ -7,6 +7,7 @@ A few of his points:
 - We'll transpile, compile and minify *even more* as time goes on
 - JS (in 2017) is about to have the building blocks for new app paradigms: WebAssembly, SharedArrayBuffer, Atomics, etc
 - To predict the future of the web, look at what high-performance native systems do
+- This will lead to better performance and bundle size
 
 What is fun about a post like this, now seven years old, is we can see the results of those predictions and insights.
 
@@ -16,37 +17,39 @@ The investment in compilers and tooling pipelines has largely not led to a reduc
 
 In fact, the bigger your toolchain for compilation the more likely it has become that you ship more JS than you should. Why did this happen? And was this outcome forseeable? I think it was, and I think three things were at play that Tom didn't seem to consider:
 
-1. Human Factors
+### 1. Human Factors
 
 We tend to get what we want, and what we want is generally to ship features and product. More powerful toolchains allowing app sizes to scale with the size of the product and team just meant we could ship more features and product.
 
-This is basically the same observation that even while CPUs have gotten more powerful our programs seem to be slowing down. These tools and compilers can result in better performance, but only if we don't look at the new space in the budget and immediately overspend it.
+This is basically the same observation that even while CPUs have gotten more powerful our programs seem to be slowing down. These tools and compilers can result in better performance, but only if we *don't look at the new space in the budget and immediately overspend it.*
 
-2. The Platform
+### 2. The Platform
 
 Looking back now, its evident the platform had not stopped evolving, and the performance and bundle size impact of many newer platform APIs is not only massive, but significantly larger than a compiler could ever achieve.
 
-A really great example of this is animations. Together Web Animations, View Transitions and generators replaced the need for the animation libraries that used to be some the largest dependencies.
+Animations are really great example of this. The APIs for WebAnimations, ViewTransitions and generators together replaced the need for the animation libraries that previously were among our largest dependencies.
 
-No compiler can beat shipping zero-bytes. 
+There's an important lesson here: *No compiler can beat shipping zero-bytes.*
 
-Similarly, CSS layers, variables, advanced selectors, and improved media query capabilities replaced even more of the need for JS-based or CSS-compiler based solutions that had high runtime or bundlesize costs.
+> No compiler can beat shipping zero-bytes
 
-For their part, browsers finally implemented generator functions, fields, and private fields natively, and have now started implementation of decorators and accessors. These have played a massive role in reducing the amount of bytes we need to ship in addition to generally being faster in their native implementatios.
+The examples of this sort of platform win are everywhere: CSS layers, variables, advanced selectors, improved media query capabilities. Each of these replaced JS-runtime or CSS-compiler based solutions that had high runtime or bundlesize costs.
 
-10 different implementations of UUID in your bundle? Use crypto.randomUUID. A lot of logic to diff arrays and sets? There's APIs for unions, intersections, and more now.
+These wins happened even at the language level: browsers finally implemented generator functions, fields, and private fields natively. Currently they've started implementation of decorators and accessors. These have played a massive role in reducing the amount of bytes we need to ship in addition to generally being faster implementations.
 
-I work on an SPA that is now 12 years old, and more often than not when I'm refactoring something it looks like deleting a lot of code and replacing it with a simpler, smaller platform API.
+And at the JS SDK Level: 10 different implementations of UUID in your bundle? Use crypto.randomUUID. A lot of logic to diff arrays and sets? There are APIs for unions, intersections, and more now.
 
-So to sum up, I think betting on compilers has done much less than betting on the platform. And personally I believe there are still a lot of gains in that area to be had!
+I work on an SPA that is over 12 years old. More often than not when I'm refactoring something it looks like deleting a lot of code and replacing it with a simpler, smaller platform API.
 
-Maybe Tom was right though, and maybe we've done exactly as he thought we should: we looked at what made high-performance native code great, and realized it was the platform.
+So to sum up, I think betting on compilers has done much less than betting on the platform. And personally I believe there are still a lot of gains to be had in that area!
 
-3. Complexity
+Maybe Tom was right though, and maybe we've done exactly as he thought we should: *we looked at what made high-performance native code great, and realized it was the platform.*
 
-There's a point missing in Tom's post. A point I think was able to be seen then, and ideally addressed then but was nevertheless missed. A point that I think the web community as a whole missed for the better part of a decade:
+### 3. Complexity
 
-**If you want faster apps, reduce their complexity.**
+There's a key point missing in Tom's post. A point I think was able to be seen then, and even addressed then but was nonetheless missed. A point that I think the web community as a whole missed for the better part of a decade: *If you want faster apps, reduce their complexity.*
+
+> If you want faster apps, reduce their complexity.
 
 Tom's ideas mostly related to how to optimize complexity that already exists: but in the same way that no compiler can ever beat shipping 0 bytes, no compiler can optimize a for-loop to be faster than no-loop (unless of course for the case where the loop has no outputs and can just be safely deleted).
 
@@ -61,5 +64,9 @@ The rise of RSCs, HTMX, Qwik, LiveWire and (to a lesser extent) Astro are in my 
 So too are the many local-first DB offerings like Replicache: they just went the other way on the same problem and decided "if we're sending it all there anyway, why not just keep it there".
 
 But in my opinion these choices are too often trying to sidestep the problem without really solving it. This does not make these bad solutions or bad tools in any way, some of them I even think are amazing and will shape the architecture of apps for the next decade in a positive way. But this does mean there's more out there for us to work to solve still.
+
+### Compilers Are OK
+
+Don't mistake this for a screed against compilers. I think compilers are doing amazing things and will continue to play a critical role in the evolution of the web. Its a mistake though to think we can compile away all our problems or to treat them as the panacea for performance.
 
 So here’s my advice for anyone who wants to make a dent in the future of web development: invest in the platform, and be thoughtful in your data design.
