@@ -54,6 +54,8 @@ To that end, I finally realized that fully-embracing the request-centric world a
 
 If you are curious I wrote up a length explanation of how this will work [here](https://github.com/emberjs/data/pull/9612/commits/3352349217368bdc9635175586bc06923273f7f1), which I plan to turn into an RFC soon after we ship 5.4
 
+The third point is solved by integration of the GC with the CachePolicy (we'd respect the soft-expiry as a retention policy more than likely, or add an explicit hook to make it fully configurable), as well as by the PersistedCache experiment.
+
 ## Thinking about Schemas
 
 When I first started talking about SchemaRecord (then called SchemaModel) I envisioned pairing it with an optional Schema DSL to make authoring schemas and types a quick unified experience.
@@ -71,6 +73,8 @@ So far: I feel they are more hype than useful. My mental model of them is probab
 I really want to get mutations into the DataWorker and PersistedCache permitives soon, to do so we need named stores. (There's also some cache API changes we will want, but those can be experimented with separately).
 
 It would be a fairly small RFC and implementation, I'm tempted to ship one in the next few weeks.
+
+If you haven't seen DataWorker and PersistedCache, I'd recommend watching my talk from [EmberFest 2024](https://www.youtube.com/watch?v=BCv8OgcG5vM)
 
 ## The Scheduler
 
