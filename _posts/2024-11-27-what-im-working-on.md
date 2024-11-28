@@ -1,5 +1,5 @@
 ---
-title: Polaris: What I'm Working On
+title: Polaris | What I'm Working On
 published: true
 draft: true
 ---
