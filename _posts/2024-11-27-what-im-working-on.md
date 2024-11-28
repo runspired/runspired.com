@@ -81,6 +81,49 @@ I remain convinced that the [Render Aware Scheduler Interface](https://github.co
 
 The state of routing in Ember has become a huge bottleneck to shipping new features in WarpDrive. I have so many things waiting in the wings dependent on it: so I've been doing a lot of ruminating on how to push exploration there forward: I'm extremely tempted to ship a whole new router, and I don't think that's a good thing.
 
+A few of the things I'm looking to explore:
+
+- An EdgeServer that eliminates fetch waterfalls and allows any app to utilize the big-pipe approach
+- route request pre-fetch via the DataWorker
+- Turning Ember apps into MPAs
+- using context to provide route requests to component trees
+
+```gts
+import { Route } from '@warp-drive/ember';
+
+export function fetch(params) {
+  // return value can either be a request Future, promise or an object.
+  // if it is an object, each key of the object should point at
+  // either a request Future, promise or a value.
+  // the function should not be marked `async`
+  // the return will become the `@route` arg provided to the template.
+}
+
+const MyRoute = <template>
+  {{!--access the result of the fetch function (unresolved) --}}
+  {{@route}}
+
+  {{!
+    component trees invoked here or within
+    the yield would be able to access the
+    route object via `consume('@route')`
+
+    standard yield also works
+  -- }}
+  {{yield}}
+</template>;
+```
+
+- using context to provide request results to a component tree
+
+```gts
+const MyRoute = <template>
+  <Request @request={{@route.someRequest}} @key="awesomeSauce">
+    <AwesomeSauceConsumer />
+  </Request>
+</template>;
+```
+
 ## Testing
 
 WarpDrive should offer an integrating testing experience. I've been exploring ideas for that with [Holodeck](https://github.com/emberjs/data/tree/main/packages/holodeck#readme) and [Diagnostic](https://github.com/emberjs/data/tree/main/packages/diagnostic#readme). The next step is to add a simple router (likely I'll just use something layer on honojs, which is what I've used for a POC of this) and re-use WarpDrive as the ORM Layer.
