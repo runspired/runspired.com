@@ -88,7 +88,7 @@ A few of the things I'm looking to explore:
 - Turning Ember apps into MPAs
 - using context to provide route requests to component trees
 
-```gts
+```ts
 {% raw %}
 import { Route } from '@warp-drive/ember';
 
@@ -111,11 +111,12 @@ const MyRoute = <template>
 
   {{yield}}
 </template>;
+{% endraw %}
 ```
 
 - using context to provide request results to a component tree
 
-```gts
+```hbs
 {% raw %}
 const MyRoute = <template>
   <Request @request={{@route.someRequest}} @key="awesomeSauce">
