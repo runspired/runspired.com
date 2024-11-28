@@ -8,15 +8,15 @@ type Author = {
 };
 ```
 
-## Posts
+## Drafts
 
 <ul>
   {% for post in site.posts %}
-    {% unless post.draft %}
+    {% if post.draft %}
     <li>
       <time datetime="{{ post.date | date_to_xmlschema }}"></time>{{ post.date | date: "%Y-%m-%d" }}
       <a href="{{ post.url }}">{{ post.title }}</a>
     </li>
-    {% endunless %}
+    {% endif %}
   {% endfor %}
 </ul>

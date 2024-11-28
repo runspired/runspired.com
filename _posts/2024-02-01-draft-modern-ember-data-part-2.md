@@ -1,12 +1,13 @@
 ---
-title: [DRAFT] Not Your Parent's EmberData (part 2)
+title: Not Your Parent's EmberData (part 2)
 published: true
+draft: true
 ---
 
 > **warning**
 > This blog post is currently a **DRAFT**
 
-# [DRAFT] Not Your Parent's EmberData (part 2)
+# Not Your Parent's EmberData (part 2)
 
 > This is Part 2 of a series exploring architectural decisions within EmberData. If you
 > haven't read [Part 1](./2024-01-31-modern-ember-data.md), you should read that first.
