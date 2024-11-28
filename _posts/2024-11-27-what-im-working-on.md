@@ -100,16 +100,16 @@ export function fetch(params) {
 }
 
 const MyRoute = <template>
-  {{!--access the result of the fetch function (unresolved) --}}
+  access the result of the fetch function (unresolved)
   {{@route}}
 
-  {{!--
+
     component trees invoked here or within
     the yield would be able to access the
     route object via `consume('@route')`
 
     standard yield also works
-  --}}
+
   {{yield}}
 </template>;
 ```
