@@ -88,7 +88,7 @@ A few of the things I'm looking to explore:
 - Turning Ember apps into MPAs
 - using context to provide route requests to component trees
 
-```gts
+```
 import { Route } from '@warp-drive/ember';
 
 export function fetch(params) {
@@ -114,7 +114,7 @@ const MyRoute = <template>
 
 - using context to provide request results to a component tree
 
-```gts
+```
 const MyRoute = <template>
   <Request @request={{@route.someRequest}} @key="awesomeSauce">
     <AwesomeSauceConsumer />
