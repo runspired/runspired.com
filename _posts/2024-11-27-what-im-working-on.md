@@ -1,7 +1,6 @@
 ---
 title: Polaris | What I'm Working On
 published: true
-draft: true
 ---
 
 # Polaris: What I'm Working On
