@@ -39,7 +39,7 @@ This means that 5.3 supports vite 💜
 
 ## Planning the replacement for unloadAll and unloadRecord
 
-`unloadRecord` and `unloadAll` are to APIs that barely made sense in the resource-centric past of EmberData and make no-sense in the request-centric future of WarpDrive. They've been crutches for apps that really needed to care about 
+`unloadRecord` and `unloadAll` are two APIs that barely made sense in the resource-centric past of EmberData and make no-sense in the request-centric future of WarpDrive. They've been crutches for apps that really needed to care about memory management.
 
 But there's been no design push to replace them because its not been totally clear what a good general-purpose replacement for them would be that doesn't immediately fall victim to the same issues they have around accidentally creating broken state in the app.
 
