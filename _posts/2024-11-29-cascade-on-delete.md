@@ -161,6 +161,8 @@ export class ResourcePolicy {
 Ok so this part is going to get a little messy. Here's the full implementation of `_onDeleteAssociated` to get oriented with, afterwards I'll walk through it chunk by chunk.
 
 ```ts
+import { assert } from '@ember/debug';
+
 import type { GraphEdge, ImplicitEdge, ResourceEdge } from '@ember-data/graph/-private';
 import { peekGraph } from '@ember-data/graph/-private';
 
@@ -242,7 +244,10 @@ export class ResourcePolicy {
         // as it may not have been cleaned up yet), then we can remove it.
         //
         const associatedStorage = graph.identifiers.get(associatedIdentifier);
-        assert(`expected to find associated storage for ${associatedIdentifier.lid}`, associatedStorage);
+        assert(
+          `expected to find associated storage for ${associatedIdentifier.lid}`,
+          associatedStorage
+        );
 
         for (const assocKey of Object.keys(associatedStorage)) {
           const assocEdge: GraphEdge | undefined = associatedStorage[assocKey];
@@ -251,6 +256,7 @@ export class ResourcePolicy {
           if (assocEdge.remoteState !== null) {
             // if this edge is the edge that kicked off the deletion, we treat it as
             // removed even though the state is still present in the graph.
+            //
             if (assocEdge.remoteState === identifier) {
               continue;
             }
@@ -258,7 +264,7 @@ export class ResourcePolicy {
             // if we have remoteState that is not the originating identifier,
             // then this record cannot be removed, so we break out both the
             // inner and the outer loop.
-            // eslint-disable-next-line no-labels
+            //
             break gc;
           }
         }
@@ -279,5 +285,13 @@ export class ResourcePolicy {
       }
     }
   }
+}
+
+function isBelongsToEdge(edge: GraphEdge): edge is ResourceEdge {
+	return edge.definition.kind === 'belongsTo';
+}
+
+function isImplicitEdge(edge: GraphEdge): edge is ImplicitEdge {
+	return edge.definition.isImplicit;
 }
 ```
