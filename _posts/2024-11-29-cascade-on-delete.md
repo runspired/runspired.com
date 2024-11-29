@@ -31,7 +31,7 @@ for the types of records we typically care about this feature for).
 import type { Store } from './store';
 
 type ResourcePolicyConfig = {
-	onDeleteAssociated: Record<string, Set<string>>;
+  onDeleteAssociated: Record<string, Set<string>>;
 };
 
 /**
@@ -39,27 +39,27 @@ type ResourcePolicyConfig = {
  * allowing for more advanced behaviors like cascading or associated deletes.
  */
 export class ResourcePolicy {
-	store: Store;
-	policy: ResourcePolicyConfig;
+  store: Store;
+  policy: ResourcePolicyConfig;
 
-	constructor(store: Store, policy: ResourcePolicyConfig) {
-		this.store = store;
-		this.policy = policy;
-	}
+  constructor(store: Store, policy: ResourcePolicyConfig) {
+    this.store = store;
+    this.policy = policy;
+  }
 
     /**
-	 * Adds a rule to attempt deletion of records of the `associatedType` when
-	 * a record of the `type` is deleted. This will only work for 1:none relationships
-	 * where the associated record has a one-way relationship to the primary type.
-	 *
-	 * Thus this is a very limited feature and should be used with caution, it is
-	 * primarily intended for use as a cascade delete on implicit relationships of
-	 * dynamically generated records.
-	 */
-	addAssociatedDelete(type: string, associatedType: string) {
-		this.policy.onDeleteAssociated[type] = this.policy.onDeleteAssociated[type] ?? new Set();
-		this.policy.onDeleteAssociated[type].add(associatedType);
-	}
+   * Adds a rule to attempt deletion of records of the `associatedType` when
+   * a record of the `type` is deleted. This will only work for 1:none relationships
+   * where the associated record has a one-way relationship to the primary type.
+   *
+   * Thus this is a very limited feature and should be used with caution, it is
+   * primarily intended for use as a cascade delete on implicit relationships of
+   * dynamically generated records.
+   */
+  addAssociatedDelete(type: string, associatedType: string) {
+    this.policy.onDeleteAssociated[type] = this.policy.onDeleteAssociated[type] ?? new Set();
+    this.policy.onDeleteAssociated[type].add(associatedType);
+  }
 }
 ```
 
@@ -102,7 +102,7 @@ been recently removed and method call to kickoff our subscription handling.
 import type { Store } from './store';
 
 type ResourcePolicyConfig = {
-	onDeleteAssociated: Record<string, Set<string>>;
+  onDeleteAssociated: Record<string, Set<string>>;
 };
 
 /**
@@ -110,17 +110,17 @@ type ResourcePolicyConfig = {
  * allowing for more advanced behaviors like cascading or associated deletes.
  */
 export class ResourcePolicy {
-	store: Store;
-	policy: ResourcePolicyConfig;
-+	recentlyRemoved: WeakSet<StableRecordIdentifier>;
+  store: Store;
+  policy: ResourcePolicyConfig;
++  recentlyRemoved: WeakSet<StableRecordIdentifier>;
 
-	constructor(store: Store, policy: ResourcePolicyConfig) {
-		this.store = store;
-		this.policy = policy;
-+		this.recentlyRemoved = new WeakSet();
+  constructor(store: Store, policy: ResourcePolicyConfig) {
+    this.store = store;
+    this.policy = policy;
++    this.recentlyRemoved = new WeakSet();
 
-+		this._setup();
-	}
++    this._setup();
+  }
 
   // ... more below
 }
@@ -132,24 +132,24 @@ Then I setup our subscriptions:
 export class ResourcePolicy {
 
    // .. more between
-	
+  
   _setup() {
-	const { notifications } = this.store;
+  const { notifications } = this.store;
 
     // any time a resource change occurs
-	notifications.subscribe('resource', (identifier: StableRecordIdentifier, type: CacheOperation) => {
-	  // don't do any special handling for newly created, unsaved records
-	  if (!identifier.id) {
-	    return;
-	  }
+  notifications.subscribe('resource', (identifier: StableRecordIdentifier, type: CacheOperation) => {
+    // don't do any special handling for newly created, unsaved records
+    if (!identifier.id) {
+      return;
+    }
 
-	  switch (type) {
+    switch (type) {
     // if the change is a deletion, consider if we need to delete associated records
-		case 'removed':
-		  void this._onDeleteAssociated(identifier);
-		  break;
-		}
-	  });
+    case 'removed':
+      void this._onDeleteAssociated(identifier);
+      break;
+    }
+    });
     }
 
   // .. more below
@@ -170,19 +170,19 @@ export class ResourcePolicy {
 
   // ... more between
 
-	_onDeleteAssociated(identifier: StableRecordIdentifier) {
-		// This guards against multiple notifications for removal of the same
-		// record, which occurs in (at least) 4.12 due to multiple parts of the
-		// cache independently reporting the removal during cleanup.
+  _onDeleteAssociated(identifier: StableRecordIdentifier) {
+    // This guards against multiple notifications for removal of the same
+    // record, which occurs in (at least) 4.12 due to multiple parts of the
+    // cache independently reporting the removal during cleanup.
     //
-		if (this.recentlyRemoved.has(identifier)) return;
-		
-		this.recentlyRemoved.add(identifier);
+    if (this.recentlyRemoved.has(identifier)) return;
+    
+    this.recentlyRemoved.add(identifier);
 
-		assert('identifier must have an id', identifier.id);
-		const { store } = this;
-		const { type } = identifier;
-		const associated = this.policy.onDeleteAssociated?.[type];
+    assert('identifier must have an id', identifier.id);
+    const { store } = this;
+    const { type } = identifier;
+    const associated = this.policy.onDeleteAssociated?.[type];
 
 
     // if we have no rule for this type, no cleanup to attempt
@@ -278,6 +278,6 @@ export class ResourcePolicy {
         store.unloadRecord(record);
       }
     }
-	}
+  }
 }
 ```
