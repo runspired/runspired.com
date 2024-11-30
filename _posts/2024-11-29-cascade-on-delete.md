@@ -1,14 +1,13 @@
 ---
 title: Adventures in WarpDrive | Cascade on Delete
 published: true
-draft: true
 ---
 
 # Adventures in WarpDrive | Cascade on Delete
 
 Recently at [AuditBoard](https://www.auditboard.com/) we had a case come up where we needed to perform some additional cleanup whenever certain records were deleted.
 
-For instance: imagine you have both a `user` and one or more `search-result` resources, where `search-result` contains a link to the full user and a few fields related to a search query or used as a table row. When `user:1` is deleted, you want to ensure that any `user-result:X` related to `user:1` is also deleted, because their existence no longer makes sense.
+For instance: imagine you have both a `user` and one or more `search-result` resources, where `search-result` contains a link to the full user and a few fields related to a search query or used as a table row. When `user:1` is deleted, you want to ensure that any `search-result:X` related to `user:1` is also deleted, because their existence no longer makes sense.
 
 This could be achieved by writing a function `deleteUser` that you use anywhere a user is deleted that handles deleting both the user and iterating available search-results and deleting any that pointed at the user, or by manually handling this logic in each location in the code that requires it.
 
