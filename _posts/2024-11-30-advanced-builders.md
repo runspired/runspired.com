@@ -40,19 +40,23 @@ function exampleFindRecord<T>(
     op: 'findRecord',
   });
 }
-
-type User = {
-  id: string;
-  name: string;
-  [Type]: 'user';
-};
-const userRequest = exampleFindRecord<User>('user', '1');
 ```
 
 When used with the store the following will happen:
 
 ```ts
+type User = {
+  id: string;
+  name: string;
+  [Type]: 'user';
+};
+
+// ...
+
+const userRequest = exampleFindRecord<User>('user', '1');
 const { content } = await store.request(userRequest);
+
+// ...
 
 content.data; // type User!
 ```
@@ -68,7 +72,7 @@ Useful, ok let's take a dive into eight things builders make easy that adapters 
 Builders are useful even when you're only making a request once. Why? They provide a nice abstraction around ensuring the
 type signature is setup correctly, make it easier to write tests or share the request later if it turns out you need to, and often clean up the readability of your code.
 
-Some common questions though are "what should be builders" or its cousing "how many builders should I have". I think the "sensible defaults" mapping closely to the methods the store and adapter used to have (`findRecord`, `createRecord`, `deleteRecord`, `query` etc.) leads people to belive builders should be highly generic, or use just these few recognizable names.
+Some common questions though are "what should be builders" or its cousin "how many builders should I have". A negative effect of the "sensible defaults" mapping so closely to the methods the store and adapter used to have (`findRecord`, `createRecord`, `deleteRecord`, `query` etc.) is that it leads people to believe builders should be highly generic, or use just these few recognizable names.
 
 On the contrary, use as many builders as seems reasonable. This can be anywhere from a builder per-request or per-endpoint to a small number of carefully curated builders that work against most endpoints targeting a highly conventional API.
 
