@@ -158,7 +158,7 @@ export class ResourcePolicy {
 
 ## Performing the Cascade/Associated Delete
 
-Ok so this part is going to get a little messy. Here's the full implementation of `_onDeleteAssociated` to get oriented with, afterwards I'll walk through it chunk by chunk.
+Ok so this part is going to get a little messy. Here's the full implementation of `_onDeleteAssociated` to get oriented with. It's annotated but afterwards I'll also walk through a few of the salient points:
 
 ```ts
 import { assert } from '@ember/debug';
@@ -209,13 +209,13 @@ export class ResourcePolicy {
     // we need to find the implicitly related record
     // and then determine if all of its relationships are now empty
     // and only remove it if so: we use the graph to determine this.
-    // If there are no edges, there are no relationships
     //
     const graph = peekGraph(store)!;
     const edgeStorage = graph?.identifiers.get(identifier);
-    if (!edgeStorage) {
-      return;
-    }
+
+    // If there are no edges, there are no relationships
+    //
+    if (!edgeStorage) return;
 
     
     // for our app's specific scenario, we only wanted to unload the record
@@ -228,7 +228,9 @@ export class ResourcePolicy {
       // gaining access to implicit keys via an explicit API is a feature we need to add when we
       // mark the Graph as a fully public API
       //
-      const keys = Object.keys(edgeStorage).filter((key) => key.startsWith(`implicit-${associatedType}:`));
+      const keys = Object.keys(edgeStorage).filter(
+        (key) => key.startsWith(`implicit-${associatedType}:`)
+      );
       const key = keys[0];
       assert('expected to find a key', key);
       assert(`expected to only find one key, found ${keys.length}`, keys.length === 1);
@@ -239,9 +241,10 @@ export class ResourcePolicy {
 
       // yup, that's a label. I hate me too but they are useful in this scenario.
       gc: for (const associatedIdentifier of associatedIdentifers) {
-        // for each associated identifier,
-        // if all of it's own relationships are empty (not including the one we're deleting
-        // as it may not have been cleaned up yet), then we can remove it.
+        // for each associated identifier, if all of it's own
+        // relationships are empty (not including the one we're
+        // deleting as it may not have been cleaned up yet),
+        // then we can remove it.
         //
         const associatedStorage = graph.identifiers.get(associatedIdentifier);
         assert(
@@ -254,23 +257,25 @@ export class ResourcePolicy {
           assert('expected to find a belongsTo edge', assocEdge && isBelongsToEdge(assocEdge));
 
           if (assocEdge.remoteState !== null) {
-            // if this edge is the edge that kicked off the deletion, we treat it as
-            // removed even though the state is still present in the graph.
+            // if this edge is the edge that kicked off the deletion,
+            // we treat it as removed even though the state is still
+            // present in the graph.
             //
-            if (assocEdge.remoteState === identifier) {
+            if (assocEdge.remoteState === identifier)
               continue;
-            }
 
-            // if we have remoteState that is not the originating identifier,
-            // then this record cannot be removed, so we break out both the
-            // inner and the outer loop.
+
+            // if we have remoteState that is not the originating
+            // identifier, then this record cannot be removed, so
+            // we break out both the inner and the outer loop.
             //
             break gc;
           }
         }
 
-        // if we made here, then all of the associated record's relationships are empty
-        // and we can remove the record.
+        // if we made here, then all of the associated record's
+        // relationships are empty and we can remove the record.
+        // 
         const record = store.peekRecord(associatedIdentifier);
         assert('expected to find a record', record);
         if (record) {
@@ -295,3 +300,45 @@ function isImplicitEdge(edge: GraphEdge): edge is ImplicitEdge {
 	return edge.definition.isImplicit;
 }
 ```
+
+Ok, so in this implementation a few things were specific to AuditBoard's use cases:
+
+- the associated records for which we cascade the delete only ever utilize belongsTo relationships, never hasMany relationships.
+- the associated records sometimes (but not always) contain more than one belongsTo relationship, in the single case there's a simple fully public API to quickly perform the removal
+- these belongsTo relationships are all implemented as one-directional (`inverse: null`)
+
+All this means for you is that if you want to implement a similar concept in your app, its best to first understand the requirements your app has around cascading deletes. There are ways to handle hasMany relationships, cascade-on-delete for regular relationships, cascade-on-delete for completely unrelated records etc: you just need to know the rules and shape of the problem as it pertains to your app.
+
+That is what is great about the NotificationManager, its a simple API but it lets us quickly write code that can do complex things within our specific app-domain logic.
+
+The two questions you probably have come from the code handling what happens when one of our associated records relates to more than one type: what is the graph, and what are implicit edges.
+
+## The Graph
+
+The Graph is a library used by the JSON:API Cache which we built so that cache implementations (for any format) could delegate one of the hardest problems (managing relationships) to a primitive built and optimized for it.
+
+We've kept the API for it private to this point because we expect to change the implementation of it quite a bit while adding support for paginated relationships, and there are some open questions around whether it should also become how documents are stored (the answer is probably "yes").
+
+The Graph is just that, a graph: it stores the relationships (directional Edges) between resource CacheKeys (identifiers).
+
+## Implicit Edges
+
+When the Graph encounters a one-direction relationship e.g. something like a belongsTo or a hasMany with `inverse: null`, it creates an implicit inverse relationship for convenience and performance.
+
+For instance, lets say a user has a car, the car gets into an accident and is totaled, and now the user does not have a car.
+
+We might model this as a hasMany (`user.cars`) pointing at a belongsTo (`car.owner`), or we might model this with `inverse: null` (e.g. just `user.cars`, and no inverse on the car).
+
+In the case there is no inverse, when the car is totaled and thus deleted, we need to know what relationships that car was in to remove its entry. That's where the implicit edge comes in, it tells us exactly what relationships currently point at the car, and so following them backwards we can quickly remove the car from all associated relationships.
+
+This feature is one of the many small niceties of working with relationships in EmberData/WarpDrive, and it happens to sound exactly like the information we need for cascade-on-delete!
+
+To be clear, we could implement this with public API by iterating all records of the associated type and checking the current values of their relationships, but that is a far more expensive operation as it requires iterating far more values, and potentially creating ui objects for them and their relationships.
+
+So in our case with `user` and `search-result`, we reach in to the list of implicit edges in the graph for the user that got deleted, get the list, and for each implicit relationship if it matches our associated type (`search-result`) we perform the deletion check. Elegant really, though I wish we were closer to making this information publically and conveniently accessible. I don't like reaching into private APIs either 🙈
+
+This exploration though lets me feel out what information should be public and what (future) public APIs are missing from the Graph in its current state.
+
+---
+
+This has been an Adventure in WarpDrive. Stay tuned for our next episode!
