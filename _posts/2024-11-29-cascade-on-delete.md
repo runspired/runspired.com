@@ -99,31 +99,31 @@ been recently removed and method call to kickoff our subscription handling.
 ```diff
 +import type { StableRecordIdentifier } from '@warp-drive/core-types';
 +import type { CacheOperation } from '@ember-data/store';
-import type { Store } from './store';
+ import type { Store } from './store';
 
-type ResourcePolicyConfig = {
-  onDeleteAssociated: Record<string, Set<string>>;
-};
+ type ResourcePolicyConfig = {
+   onDeleteAssociated: Record<string, Set<string>>;
+ };
 
-/**
- * The ResourcePolicy manages rules for cleanup whenever a record is deleted,
- * allowing for more advanced behaviors like cascading or associated deletes.
- */
-export class ResourcePolicy {
-  store: Store;
-  policy: ResourcePolicyConfig;
+ /**
+  * The ResourcePolicy manages rules for cleanup whenever a record is deleted,
+  * allowing for more advanced behaviors like cascading or associated deletes.
+  */
+ export class ResourcePolicy {
+   store: Store;
+   policy: ResourcePolicyConfig;
 +  recentlyRemoved: WeakSet<StableRecordIdentifier>;
 
-  constructor(store: Store, policy: ResourcePolicyConfig) {
-    this.store = store;
-    this.policy = policy;
+   constructor(store: Store, policy: ResourcePolicyConfig) {
+     this.store = store;
+     this.policy = policy;
 +    this.recentlyRemoved = new WeakSet();
 
 +    this._setup();
-  }
+   }
 
-  // ... more below
-}
+   // ... more below
+ }
 ```
 
 Then I setup our subscriptions:
