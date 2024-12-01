@@ -1,7 +1,6 @@
 ---
 title: EdgePipes | The Alternative to SSR and RSCs
 published: true
-draft: true
 ---
 
 # EdgePipes | The Alternative to SSR and RSCs
