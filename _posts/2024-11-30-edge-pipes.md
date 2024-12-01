@@ -1,10 +1,10 @@
 ---
-title: Edge Pipes | The Alternative to SSR and RSCs
+title: EdgePipes | The Alternative to SSR and RSCs
 published: true
 draft: true
 ---
 
-# Edge Pipes | The Alternative to SSR and RSCs
+# EdgePipes | The Alternative to SSR and RSCs
 
 If you've talked with me at any point over the past few years (in person, at conferences, or listened in anywhere someone unwisely chose to give me a platform) you've probably heard me mention "SSD" or "Server Side Data".
 
@@ -30,21 +30,21 @@ This design is premised on a few key ideas:
 
 5. That the application has intelligent enough state and routing management to take advantage of these edge-function to optimistically prefetch data for pages the users might go to next, and can delegate this responsibility off-thread.
 
-As I've thought more on this idea I've started rebranding it as "edge pipes" instead of SSD to better communicate what it does and where it differentiates.
+As I've thought more on this idea I've started rebranding it as "EdgePipes" instead of SSD to better communicate what it does and where it differentiates.
 
 ## What's different?
 
-Unlike SSR, Edge Pipes should be fairly resource-consumption friendly. Like SSR, edge pipes can be used to progressively enhance the performance or experience of an application.
+Unlike SSR, EdgePipes should be fairly resource-consumption friendly. Like SSR, EdgePipes can be used to progressively enhance the performance or experience of an application.
 
-Unlike SSR, Edge Pipes optimize page-loads even after the initial page.
+Unlike SSR, EdgePipes optimize page-loads even after the initial page.
 
-Unlike SSR and RSCs, Edge Pipes don't create a double-request or rehydration problem, which should lead to applications being *actually* interactive faster, not just appearing to be.
+Unlike SSR and RSCs, EdgePipes don't create a double-request or rehydration problem, which should lead to applications being *actually* interactive faster, not just appearing to be.
 
-Unlike RSCs edge pipes don't change your security model, make you think about where your servers are in relation to your database, or ask you to write your API in JS.
+Unlike RSCs EdgePipes don't change your security model, make you think about where your servers are in relation to your database, or ask you to write your API in JS.
 
-Unlike RSCs, edge pipes actually make sense on the edge, because they don't need to be located close to your microservices and databases.
+Unlike RSCs, EdgePipes actually make sense on the edge, because they don't need to be located close to your microservices and databases.
 
-I also suspect that edge-pipes would be easy to hyper-optimize. Their restricted nature likely means they can be compiled into executables with the likes of bun and static hermes. They could potentially rewrite responses into more streamable and compressible forms for final delivery (if the plugin for doing so is paired with a plugin in the client that understands how to re-expand).
+I also suspect that EdgePipes would be easy to hyper-optimize. Their restricted nature likely means they can be compiled into executables with the likes of bun and static hermes. They could potentially rewrite responses into more streamable and compressible forms for final delivery (if the plugin for doing so is paired with a plugin in the client that understands how to re-expand).
 
 Since routes are often nested, the client could easily send a hit for which fetch-hooks it already has (and thus can be skipped).
 
@@ -60,6 +60,6 @@ Dead ends. Useful deadends mind you, but deadends. Useful because I really like 
 
 But there were ideas in SSR I did like: the idea that we could multiplex all the requests associated to a given page visit. The idea that we could flatten waterfalls. The idea that we could leverage how the internet backbone prioritizes data. The idea that we could shift some compute closer to the user to boost their experience. The idea that we could do this progressively overtop of existing applications as little more than an opt-in enhancement without requiring teams to adopt a whole new paradigm or language.
 
-And what I like most about the edge-pipe approach: it even should work for fairly lightweight minimal apps that do a lot of their work on the server.. because it is fundamentally around optimizing the fetch pipeline wherever one exists.
+And what I like most about the EdgePipe approach: it even should work for fairly lightweight minimal apps that do a lot of their work on the server.. because it is fundamentally around optimizing the fetch pipeline wherever one exists.
 
-Anyhew, so those are "edge pipes" and if you've been full of WTFs wondering what I meant talking about "SSD" these past few years now you know 💜
+Anyhew, so those are EdgePipes and if you've been full of WTFs wondering what I meant talking about SSD these past few years now you know 💜
