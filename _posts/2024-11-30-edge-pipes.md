@@ -4,7 +4,7 @@ published: true
 draft: true
 ---
 
-# Edge Pipes
+# Edge Pipes | The Alternative to SSR and RSCs
 
 If you've talked with me at any point over the past few years (in person, at conferences, or listened in anywhere someone unwisely chose to give me a platform) you've probably heard me mention "SSD" or "Server Side Data".
 
