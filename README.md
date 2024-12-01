@@ -4,7 +4,11 @@ type Author = {
     alias: '@runspired';
     title: 'Software Engineer';
     description: 'OpenSource Contributor to Data Frameworks';
-    topics: 'WarpDrive' | 'EmberData' | 'EdgeData' | 'ServerSideData';
+    topics: 'WarpDrive' | 'EmberData' | 'EdgePipes' | 'MPAs' | 'SPAs';
+    socials: {
+      bluesky: "@runspired.com";
+      github: "runspired";
+    }
 };
 ```
 
