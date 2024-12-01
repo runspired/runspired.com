@@ -32,6 +32,8 @@ This design is premised on a few key ideas:
 
 As I've thought more on this idea I've started rebranding it as "edge pipes" instead of SSD to better communicate what it does and where it differentiates.
 
+## What's different?
+
 Unlike SSR, Edge Pipes should be fairly resource-consumption friendly. Like SSR, edge pipes can be used to progressively enhance the performance or experience of an application.
 
 Unlike SSR, Edge Pipes optimize page-loads even after the initial page.
@@ -42,6 +44,20 @@ Unlike RSCs edge pipes don't change your security model, make you think about wh
 
 I also suspect that edge-pipes would be easy to hyper-optimize. Their restricted nature likely means they can be compiled into executables with the likes of bun and static hermes. They could potentially rewrite responses into more streamable and compressible forms for final delivery (if the plugin for doing so is paired with a plugin in the client that understands how to re-expand).
 
+Since routes are often nested, the client could easily send a hit for which fetch-hooks it already has (and thus can be skipped).
+
 Using it for prefetch doesn't even have to deliver the response all-the-way to the client: it could just pre-fetch to a cache on the edge so that the cost to the user's device is only paid if they navigate to the associated page, solving elegantly a common problem seen with sites that attempt to use prefetch aggressively for every link and button.
+
+## But Why?
+
+I started thinking about this architecture while working at LinkedIn, where quite often we ran our SSR (fastboot) in a "data only" mode somewhat similar to this and for similar reasons. But (for lots of reasons) that implementation always left way more to be desired than it solved problems.
+
+I've never liked SSR. Okay that might be a bit of a lie there was a short period when SSR first burst onto the scene and EmberJS added one of the first out-of-the-box SSR solutions with fastboot that I thought it was awesome. But the rose colored lenses faded to grey quickly: the real world evidence mostly showed that SSR for anything except pre-rendering html for static sites was both cost-prohibitive and net-negative to user experiences and performance. While I'd never considered it a silver bullet, I did at least think at the time it would *improve* user experiences and maybe lead to some interesting pre-render-in-a-worker-like concepts.
+
+Dead ends. Useful deadends mind you, but deadends. Useful because I really like the tooling and ideas in many new frameworks like Astro, the built-in SSR mode of vite, and the exploration of minimalism that lit and qwik and htmx are driving (and I don't think we fully get there without the failure of SSR as a performance fix).
+
+But there were ideas in SSR I did like: the idea that we could multiplex all the requests associated to a given page visit. The idea that we could flatten waterfalls. The idea that we could leverage how the internet backbone prioritizes data. The idea that we could shift some compute closer to the user to boost their experience. The idea that we could do this progressively overtop of existing applications as little more than an opt-in enhancement without requiring teams to adopt a whole new paradigm or language.
+
+And what I like most about the edge-pipe approach: it even should work for fairly lightweight minimal apps that do a lot of their work on the server.. because it is fundamentally around optimizing the fetch pipeline wherever one exists.
 
 Anyhew, so those are "edge pipes" and if you've been full of WTFs wondering what I meant talking about "SSD" these past few years now you know 💜
