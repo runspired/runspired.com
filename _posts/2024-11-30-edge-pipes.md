@@ -42,6 +42,8 @@ Unlike SSR and RSCs, Edge Pipes don't create a double-request or rehydration pro
 
 Unlike RSCs edge pipes don't change your security model, make you think about where your servers are in relation to your database, or ask you to write your API in JS.
 
+Unlike RSCs, edge pipes actually make sense on the edge, because they don't need to be located close to your microservices and databases.
+
 I also suspect that edge-pipes would be easy to hyper-optimize. Their restricted nature likely means they can be compiled into executables with the likes of bun and static hermes. They could potentially rewrite responses into more streamable and compressible forms for final delivery (if the plugin for doing so is paired with a plugin in the client that understands how to re-expand).
 
 Since routes are often nested, the client could easily send a hit for which fetch-hooks it already has (and thus can be skipped).
