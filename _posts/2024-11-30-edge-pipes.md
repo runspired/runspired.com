@@ -34,6 +34,10 @@ As I've thought more on this idea I've started rebranding it as "edge pipes" ins
 
 Unlike SSR, Edge Pipes should be fairly resource-consumption friendly. Like SSR, edge pipes can be used to progressively enhance the performance or experience of an application.
 
+Unlike SSR, Edge Pipes optimize page-loads even after the initial page.
+
+Unlike SSR and RSCs, Edge Pipes don't create a double-request or rehydration problem, which should lead to applications being *actually* interactive faster, not just appearing to be.
+
 Unlike RSCs edge pipes don't change your security model, make you think about where your servers are in relation to your database, or ask you to write your API in JS.
 
 I also suspect that edge-pipes would be easy to hyper-optimize. Their restricted nature likely means they can be compiled into executables with the likes of bun and static hermes. They could potentially rewrite responses into more streamable and compressible forms for final delivery (if the plugin for doing so is paired with a plugin in the client that understands how to re-expand).
