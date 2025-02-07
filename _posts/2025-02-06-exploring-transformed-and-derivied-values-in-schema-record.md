@@ -44,7 +44,7 @@ const User = withDefaults({
 
 Outside of a small special group referred to as `locals`, all of these fields are created by a `derivation`. Yes: that means that derivations can return or do all sorts of things, even methods!
 
-Beyond this, there's a [proposal](https://github.com/emberjs/data/issues/9534#issue-2534328361) being floated to allow apps to define not just the fields on a resource, but even what kinds of fields are valid. Each field "kind" today (`alias`|`schema-object`|`field`|`derived`|`resource`|`collection` etc.) is roughly speaking implemented as a function following a nearly identical signature. Given this, it feels like a natural progression of the schema-verse to allow registering `kind` functions just like you can register `derivations` and `transformations` (capabilities we will dive into more below).
+Beyond this, there is a [proposal](https://github.com/emberjs/data/issues/9534#issue-2534328361) being floated to allow apps to define not just the fields on a resource, but even what kinds of fields are valid. Each field "kind" today (`alias`,`schema-object`,`field`,`derived`,`resource`,`collection` etc.) is roughly speaking implemented as a function following a nearly identical signature. Given this, it feels like a natural progression of the schema-verse to allow registering `kind` functions just like you can register `derivations` and `transformations` (capabilities we will dive into more below).
 
 So you see, while you can't just quickly slap a getter or a method on a class like you could with Model, the world is your oyster! *(please, please pretend I didn't just say that.. lest you steer your app into a miserable place)*
 
