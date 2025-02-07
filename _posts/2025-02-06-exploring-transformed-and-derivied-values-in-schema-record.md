@@ -63,7 +63,7 @@ Javascript applications, especially those that target browsers, need to balance 
 
 The Model approach to reactive-data performed poorly in all four of these categories.
 
-As apps grow, the number of Models requires and the size of their definitions grows, leading to larger and larger assets and thus larger download and parse times.
+As apps grow, the number of Models required and the size of their definitions also grows, leading to larger and larger assets and thus larger download and parse times.
 
 Since those Models contain the schema, they are often needed synchronously at unpredictable times, leading to them generally being eval'd early during an app-boot cycle.
 
