@@ -93,7 +93,7 @@ With SchemaRecord, if a property isn't in the schema, accessing (or worse attemp
 
 The full set of ways SchemaRecord is helping to steer you towards program correctness and protect against wierd and spooky bugs is fairly vast, and probably left for a blog post of its own. As a teaser, the way it goes about immutability and mutation is also designed to guide you to write more correct programs. Suffice it to say though: its important to realize that this is one of its primary goals. And it is likely to be one of the goals that developers (you) struggle with the most.
 
-As programmers we've been programmed to hack at things until they work. With Models, we often could just hack until it seemed to work. SchemaRecord demands that you step back and think through how the thing *should* work and where various behaviors and state truly belongs.
+As programmers we've been programmed to hack at things until they work. With Models, we often could just hack until it seemed to work. SchemaRecord demands that you step back and think through how the thing *should* work and where various behaviors and state *should* belong.
 
 ### The Pit of Success
 
