@@ -7,19 +7,88 @@ published: true
 
 With [@warp-drive/schema-record](https://github.com/emberjs/data/tree/main/packages/schema-record#readme) approaching its first stable release, now felt like as good a time as any to start writing about some of the key differences from [@ember-data/model](https://github.com/emberjs/data/blob/main/packages/model/README.md) in its approach to reactive-data.
 
-The first thing most will notice is that the authoring format has changed from javascript classes to json schemas. We could spend a whole article on just that shift and all the implications of it, but not today.
+The first thing most will notice is that the authoring format has changed from javascript classes to json schemas (and optionally types).
 
-There are a lot of key behavioral differences between SchemaRecord and Model, from a shift to immutability, built-in change buffering, deeply reactive object and array fields, partials, to (still under construction) a whole new relationship paradigm. These are all also worthy of their own in-depth blog posts.
+<table>
+  <thead>
+    <th>Model</th>
+    <th>Schema</th>
+  </thead>
+  <tbody>
+    <tr>
+<td>
 
-Today, I want to focus on transformed and derived values. I was motivated to write this post following [this discussion in the emberjs discord](https://discord.com/channels/480462759797063690/1337069566940942388/1337143861964968017).
+```ts
+import { cached } from '@glimmer/tracking';
+import Model, { attr, belongsTo, hasMany, type HasMany, } from '@ember-data/model';
+
+export default class User extends Model {
+  @attr('string') declare firstName: string;
+  @attr('string') declare lastName: string;
+
+  @hasMany('user', { async: false, inverse: 'friends' })
+  declare friends: HasMany<User>;
+
+  @belongsTo('user', { async: false, inverse: null })
+  declare favoritePerson: User;
+
+  @cached
+  get fullName() {
+    return `${this.firstName} ${this.lastName}`;
+  }
+}
+```
+
+</td>
+<td>
+
+```ts
+const UserSchema = {
+  type: 'user',
+  identity: { name: 'id', kind: '@id' },
+  fields: [
+    { name: 'firstName', kind: 'field', type: 'string' },
+    { name: 'lastName', kind: 'field', type: 'string' },
+    { 
+      name: 'friends', kind: 'collection', type: 'user',
+      options: { async: false, inverse: 'friends' }
+    },
+    { 
+      name: 'favoritePerson', kind: 'resource', type: 'user',
+      options: { async: false, inverse: null }
+    },
+    { 
+      name: 'fullName', kind: 'derived', type: 'concat',
+      options: { fields: ['firstName', 'lastName'], separator: ' ' }
+    }
+  ]
+};
+
+type User = {
+  firstName: string;
+  lastName: string;
+  friends: User[];
+  favoritePerson: User;
+  fullName: string;
+};
+```
+
+</td>
+    </tr>
+  </tbody>
+</table>
+
+There are a lot of key behavioral differences between SchemaRecord and Model: from a shift to immutability, built-in change buffering, deeply reactive object and array fields, to (still under construction) a whole new relationship paradigm. Today, I want to focus on one key area of change: transformed and derived values.
 
 In the world of Models, engineers could use the class to add additional behaviors and derived (computed or calculated) values in addition to the schema fields defined via decorator. When using SchemaRecord, the only fields allowed are those defined via schema. In other words, **SchemaRecord places a fairly massive new constraint on just how much you can do.**
 
-In this post, I want to explore that new constraint. Why did we add it? How does it help developers fall into the pit-of-success? And most importantly, are there any alternatives when using SchemaRecord? (*spoiler alert yes*).
+I was motivated to write about this constraint after a discussion in [emberjs discord](https://discord.com/channels/480462759797063690/1337069566940942388/1337143861964968017) wanted to know more about how to approach solving for it. In this post, I want to explore this new constraint: why we added it — how it helps developers fall into the pit-of-success — and whether there are any alternatives when using SchemaRecord (*spoiler alert yes*).
 
 ## The World According to Schema
 
 > On the sixth day of the second month of the 19th year of our library data, in the evening we lifted our eyes and low under the night-shift of the monitor we looked upon the git respository and from it issued forth a decree that henceforth our records must respect the boundaries of the data they represent.
+>
+>  *— i WarpDrive iv.11 2025 Edition*
 
 In the world of Schema, every behavior of a record is defined by its schema and derived from the data in the cache.
 
@@ -27,7 +96,7 @@ In the world of Schema, every behavior of a record is defined by its schema and 
 
 If the property or method is not included in your schema for the resource, it doesn't exist. Every SchemaRecord begins as a completely clean slate.
 
-You may (or more likely probably do not yet) know that SchemaRecord has a special "legacy" mode that allows it to emulate the default Model behaviors. Everything from props on the instance like `isDestroyed`, `isDestroying` and `isReloading` to default fields like `id`, the state-machine `currentState` and its friends `hasDirtyAttributes`, `isDeleted`, `isEmpty`, `isError`, `isLoaded`, `isNew`, `isSaving`, `isValid`, to the methods `reload`, `rollbackAttributes`, `save`, `serialize`, `unloadRecord`, `deleteRecord`, `destroyRecord`. We even emulate the private `_createSnapshot` method and `constructor.modelName`.
+You may (or more likely probably do not yet) know that SchemaRecord has a special "legacy" mode that allows it to emulate the default Model behaviors. Everything from props on the instance like `isDestroyed` and `isDestroying` to default fields like `id`, the state-machine (`currentState`) and its friends like `isDeleted`, `isError`, `isLoaded`, and `isNew`, to methods such as `reload`, `rollbackAttributes`, `save`, and `unloadRecord`. We even emulate `constructor.modelName`.
 
 Every single one of these, yes *every single one* is implemented by adding a schema-field to the definition for the resource, the result of the `withDefaults` call below.
 
@@ -42,9 +111,7 @@ const User = withDefaults({
 })
 ```
 
-Outside of a small special group referred to as `locals`, all of these fields are created by a `derivation`. Yes: that means that derivations can return or do all sorts of things, even methods!
-
-Beyond this, there is a [proposal](https://github.com/emberjs/data/issues/9534#issue-2534328361) being floated to allow apps to define not just the fields on a resource, but even what kinds of fields are valid. Each field "kind" today (`alias`,`schema-object`,`field`,`derived`,`resource`,`collection` etc.) is roughly speaking implemented as a function following a nearly identical signature. Given this, it feels like a natural progression of the schema-verse to allow registering `kind` functions just like you can register `derivations` and `transformations` (capabilities we will dive into more below).
+Outside of a small special group referred to as `locals`, all of these fields are created by a `derivation`, which implies that derivations can do all sorts of things beyond simple calcs, even so far as adding methods!
 
 So you see, while you can't just quickly slap a getter or a method on a class like you could with Model, the world is your oyster! *(please, please pretend I didn't just say that.. lest you steer your app into a miserable place)*
 
@@ -141,7 +208,7 @@ Today, lets focus on three specific kinds of FieldSchemas exploring how each mig
 
 ### Transformed Fields
 
-You may have heard of transforms before when using Models. If so, you understand the rough idea of what a transformed field is, but transformed fields are very different from the transforms that could be defined via Model attributes.
+You may have heard of transforms when using Models. If so, you understand the rough idea of transformed fields, but transformed fields are very different from the legacy transforms that could be defined via Model attributes.
 
 Defining a transform on a Model looked like this:
 
@@ -482,19 +549,25 @@ store.schema.registerDerivation(mappedTranslation);
 
 ## Parting Thoughts
 
-You can write a derivation that gives you access to services, but its generally something I'd avoid except for key-data-concerns. Key-data-concerns might be things like:
+You can write a Derivation that gives you access to services, but it is generally something I would avoid except for key-data-concerns. 
+
+key-data-concerns might be things like:
 
 - the intl service for use by derivations or transforms
 - a clock service for use by time based derivations or transforms
 
-But I wouldn't do somthing like give access to the store service or a request service.
+But I would not do something like give the record access to a Store or Request service. Side-effects and Async in particular are things to avoid in Derivations.
 
-Transformations and Derivations are only annoying if you try to make heavy use of them. If you keep it to a few well-thought-out transformations and derivations you can go really far and fast, but if you try to put tons of unique computations onto your records, it is intentionally annoying.
+If you keep to a few well-thought-out Transformations and Derivations you can go far and fast, but if you try to put tons of unique computations onto your records, you will find it intentionally frustrating.
 
-The point is to guide you into putting these calculations into the correct spots. Translations like this are a good use case for Transforms and Derivations because they are useful to tons of fields and tons of records and relatively simple calcs: you write the function once, register it, and can from then on make use of it in any schema.
+The point is to steer you into putting these calculations into more correct locations in your code.
 
-A side-effect of this pattern that is super valuable for some apps is that these functions and transformations follow a contract and pattern simple and descriptive enough that is also lets them cross the client/server boundary.
+That said, translations like in the above example are a great use-case for using them because they have high utility and reusability across both fields and resource types and perform relatively simple calcs.
 
-Lets say you have a setup such that your API returns your schemas. It follows since the API knows the shape of the data and the schema that if you wanted to make the same derivation on the API (say for creating a PDF report or CSV export) then you can either swap the transformation/derivation implementation out for one that works for your API context and/or potentially just share the same function both places from a common library.
+A side-effect of this pattern that is valuable for some apps is that Transformations and Derivations follow a contract and pattern simple and descriptive enough that it lets them cross the client/server boundary. If your API provides your schemas and your data, it follows that it could use them to make the same derivations when needed (say for creating a PDF report or CSV export).
 
-Small primitives. Constrained. But powerful.
+A curious footnote to this discussion, Transformations and Derivations may not remain the only way to customize SchemaRecord: there is a [proposal](https://github.com/emberjs/data/issues/9534#issue-2534328361) being floated to allow apps to also define what kinds of fields are valid.
+
+Currently, each field "kind" (`schema-object`,`field`,`derived`,`collection` etc.) is implemented as a function following a nearly identical signature. It feels like a natural progression of the schema-verse to allow registering `Kind` functions just like you can register Derivations and Transformations, continuing our theme of small composable primitives.
+
+Constrained. But Powerful.
