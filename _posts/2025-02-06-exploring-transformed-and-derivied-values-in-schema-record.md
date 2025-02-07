@@ -323,7 +323,25 @@ Ok, so now for the `alias` approach.
 
 ### Aliased Fields
 
-< TODO >
+An AliasField can be used to alias one key to another key present in the cache version of the resource.
+
+Unlike DerivedField (which we will see next), an AliasField may write to its source when a record is in an editable mode.
+
+AliasFields may utilize a transformation, specified by type, to pre/post process the field.
+
+An AliasField may also specify a `kind` via options. `kind` may be any other valid field kind
+other than:
+ - `@hash`
+ - `@id`
+ - `@local`
+ - `derived`
+
+This allows an AliasField to rename any field in the cache.
+
+Alias fields are generally intended to be used to support migrating between different schemas, though there are times where they are useful as a form of advanced derivation when used with a transform.
+
+For instance, an AliasField could be used to expose both a string and a Date version of the
+same field, with both being capable of being written to.
 
 ### Implementing Mapped Translations Using an Aliased Field
 
@@ -392,7 +410,15 @@ Finally, the derivation approach:
 
 ### Derived Fields
 
-< TODO >
+A DerivedField is a field whose value is derived
+from other fields in the schema.
+
+The value is read-only, and is not stored in the cache,
+nor is it sent to the server.
+
+Usage of derived fields should be minimized to scenarios where the derivation is known to be safe. 
+
+For instance, derivations that required fields that are not always loaded or that require access to related resources that may not be loaded should be avoided.
 
 ### Implementing Mapped Translations Using a Derived Field
 
@@ -452,16 +478,19 @@ store.schema.registerDerivation(mappedTranslation);
 
 ## Parting Thoughts
 
-you can write a derivation that gives you access to services, but its generally something I'd avoid except for key-data-concerns
-key-data-concerns might be things like:
-the intl service for use by derivations or transforms
-a clock service for use by time based derivations or transforms
-but I wouldn't do somthing like give access to the store service or a request service
+You can write a derivation that gives you access to services, but its generally something I'd avoid except for key-data-concerns. Key-data-concerns might be things like:
 
-they are only annoying if you try to make heavy use of them. If you keep it to a few well-thought-out transformations and derivations you can go really far and fast
-but if you try to put tons of unique computations onto your records, its intentionally annoying
-the point is to guide you into putting these calculations into the correct spots
-translations like this are a good use case for transforms and derivations because they are useful to tons of fields and tons of records and relatively simple calcs: you write the function once, register it, and can from then on make use of it in any schema
-a side-effect of this pattern that is super valuable for some apps is that these functions and transformations follow a contract and pattern simple and descriptive enough that is also lets them cross the client/server boundary
-lets say you have it setup such that your API returns your schemas
-then since the API knows the cache shape, and the schema, if you wanted to make the same derivation on the API (say for creating a PDF report) then you can either swap the transform/derivation implementation out for one that works for your API context and/or potentially just share the same function both places from a common lib
+- the intl service for use by derivations or transforms
+- a clock service for use by time based derivations or transforms
+
+But I wouldn't do somthing like give access to the store service or a request service.
+
+Transformations and Derivations are only annoying if you try to make heavy use of them. If you keep it to a few well-thought-out transformations and derivations you can go really far and fast, but if you try to put tons of unique computations onto your records, it is intentionally annoying.
+
+The point is to guide you into putting these calculations into the correct spots. Translations like this are a good use case for Transforms and Derivations because they are useful to tons of fields and tons of records and relatively simple calcs: you write the function once, register it, and can from then on make use of it in any schema.
+
+A side-effect of this pattern that is super valuable for some apps is that these functions and transformations follow a contract and pattern simple and descriptive enough that is also lets them cross the client/server boundary.
+
+Lets say you have a setup such that your API returns your schemas. It follows since the API knows the shape of the data and the schema that if you wanted to make the same derivation on the API (say for creating a PDF report or CSV export) then you can either swap the transformation/derivation implementation out for one that works for your API context and/or potentially just share the same function both places from a common library.
+
+Small primitives. Constrained. But powerful.
