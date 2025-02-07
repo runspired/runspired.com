@@ -346,7 +346,7 @@ same field, with both being capable of being written to.
 
 In the alias approach, you retain exposing two fields like the original Model had, and you still write the transformation described above. The primary advantage is retaining access to the original field.
 
-Here is our new House schema and types.
+Here are our new House schema and types.
 
 ```ts
 import { withDefaults } from '@warp-drive/schema-record/schema';
@@ -354,8 +354,8 @@ import { withDefaults } from '@warp-drive/schema-record/schema';
 const MappedTranslationObject = {
   type: 'mapped-translation-object',
   identity: null,
-  // ^ resource schemas with no identity field are used to describe reusable data structures
-  // without our primary resource types
+  // ^ resource schemas with no identity field are used to describe reusable
+  // data structures contained within our primary resource types
   fields: [
     { name: 'en', kind: 'field' },
     { name: 'es', kind: 'field' }
