@@ -9,14 +9,7 @@ With [@warp-drive/schema-record](https://github.com/emberjs/data/tree/main/packa
 
 The first thing most will notice is that the authoring format has changed from javascript classes to json schemas (and optionally types).
 
-<table>
-  <thead>
-    <th>Model</th>
-    <th>Schema</th>
-  </thead>
-  <tbody>
-    <tr>
-<td>
+**Model (before)**
 
 ```ts
 import { cached } from '@glimmer/tracking';
@@ -39,8 +32,7 @@ export default class User extends Model {
 }
 ```
 
-</td>
-<td>
+**Schema (after)**
 
 ```ts
 const UserSchema = {
@@ -72,11 +64,6 @@ type User = {
   fullName: string;
 };
 ```
-
-</td>
-    </tr>
-  </tbody>
-</table>
 
 There are a lot of key behavioral differences between SchemaRecord and Model: from a shift to immutability, built-in change buffering, deeply reactive object and array fields, to (still under construction) a whole new relationship paradigm. Today, I want to focus on one key area of change: transformed and derived values.
 
