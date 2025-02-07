@@ -1,7 +1,6 @@
 ---
 title: Exploring transformed and derived values in @warp-drive/schema-record
 published: true
-draft: true
 ---
 
 # Exploring transformed and derived values in @warp-drive/schema-record
