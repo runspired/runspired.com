@@ -141,7 +141,7 @@ Today, lets focus on three specific kinds of FieldSchemas exploring how each mig
 
 ### Transformed Fields
 
-You may have heard of transformations before when using Models. If so, you understand the rough idea of what a transformation is, but transformed fields are very different from the transformations that could be defined via Model attributes.
+You may have heard of transforms before when using Models. If so, you understand the rough idea of what a transformed field is, but transformed fields are very different from the transforms that could be defined via Model attributes.
 
 Defining a transform on a Model looked like this:
 
@@ -184,7 +184,7 @@ Enough about the faults of legacy transforms though (and there are many). Schema
 
 Transformations:
 
-- operate data to/from the cache and your app code (they run when the value is accessed or set on the record)
+- operate on data to/from the cache and your app code (they run when the value is accessed or set on the record)
 - are guaranteed to operate
 - could well be type info (but still aren't, use types for types)
 
@@ -195,12 +195,12 @@ import type { Transformation } from '@warp-drive/schema-record/schema';
 import { Type } from '@warp-drive/core-types/symbols';
 
 const DateTransform: Transformation<string, Date> = {
-  serialize(value: Date, _options, _record): string {
+  serialize(value: Date): string {
     return value.toUTCString();
   },
-  hydrate(value: string, _options, _record): Date {
+  hydrate(value: string): Date {
     return new Date(value);
-  },,
+  },
   [Type]: 'date',
 };
 
@@ -212,6 +212,8 @@ We register the transformation so that there is no ember-resolver magic. Like sc
 In addition to some of the common scenarios like Date and Enum, we expect due to their guarantee to run that some folks will choose to use them to write validation layers for fields used in forms.
 
 This is explicitly allowed, though not necessarily sensible as often form validation errors are best handled with other patterns. Validation purposes aside, throwing errors from transforms (especially in dev mode) for malformed data can be an effective way to enforce good habits and prevent sneaky bugs from occurring like integers getting coerced into strings.
+
+Lets address the original question about mapped translations using a transformed field.
 
 ### Implementing Mapped Translations Using a Transformed Field
 
@@ -251,7 +253,7 @@ store.schema.registerResource(House);
 Now, for the `mapped-translation` implementation.
 
 ```ts
-import type { Transformation } from '@warp-drive/schema-record/schema';
+import { getOwner } from '@ember/owner';
 import { Type } from '@warp-drive/core-types/symbols';
 
 const MappedTranslationTransform = {
@@ -292,6 +294,8 @@ getting too creative inside of transformations, though in a scenario like this i
 Lets say the options arg gave you access to the field-schema instead of just fieldSchema.options. Then we could do a merge in the cache during serialization to avoid removing other languages. We could also do this by duplicating a small amount of field information in the schema definition.
 
 ```ts
+import { recordIdentifierFor } from '@ember-data/store';
+import { getOwner } from '@ember/owner';
 import { Type } from '@warp-drive/core-types/symbols';
 
 const MappedTranslationTransform = {
@@ -316,7 +320,7 @@ store.schema.registerTransformation(MappedTranslationTransform);
 
 Perhaps with time and feedback this is a restriction we will lift. The primary reason this restriction was put in place is to try to prevent transformations that compute off of additional fields, as this can lead to difficult to reason about differences between what the record presents and what is in the cache.
 
-A bit of friction to steer folks the right way by default ... but a high-friction work around via padding additional info into options if the correct course is to steer against the stream.
+A bit of friction to steer folks the right way by default ... but with a work around via padding additional info into options if the correct course is to steer against the stream.
 
 Ok, so now for the `alias` approach.
 
@@ -456,6 +460,7 @@ You'll notice that the above looks a lot like the alias approach. The main diffe
 And here's what that derivation would look like:
 
 ```ts
+import { getOwner } from '@ember/owner';
 import { Type } from '@warp-drive/core-types/symbols';
 
 function mappedTranslation(
