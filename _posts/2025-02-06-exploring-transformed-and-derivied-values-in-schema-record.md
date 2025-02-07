@@ -61,7 +61,7 @@ Javascript applications, especially those that target browsers, need to balance 
 - JS eval time
 - runtime memory overhead
 
-The Model approach to reactive-data performed poorly in all three of these categories.
+The Model approach to reactive-data performed poorly in all four of these categories.
 
 As apps grow, the number of Models requires and the size of their definitions grows, leading to larger and larger assets and thus larger download and parse times.
 
