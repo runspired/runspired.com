@@ -18,7 +18,8 @@ const manager = new RequestManager()
   .use([Fetch]);
 ```
 
-> [!TIP]
+> **TIP**
+>
 > For a good introduction to managed fetch in WarpDrive, read [this post](https://runspired.com/2024/01/31/modern-ember-data.html) about modern request paradigms in EmberData (WarpDrive is the modern evolution of EmberData).
 
 Most often, handlers should be simple. Providing minimal decoration for universal responsibilities
@@ -122,10 +123,11 @@ Our PaginationEngine is going to process our requests for two separate scenarios
 - POST based pagination using params in the body (for QUERY via POST semantics)
 
 For this example, lets assume our `GET` endpoints (e.g. `GET /api/users`) accept
-the params `limit` and `offset` and in the response meta we receive a total:
+the params `limit` and `offset` and in the response meta we receive back this
+limit, offset and total:
 
-```
-{ meta: { total: number } }
+```ts
+{ meta: { total: number; limit: number; offset: number; } }
 ```
 
 Lets assume our `POST` endpoints (e.g. `POST /api/users`) accepts the same `limit` and `offset`
@@ -141,12 +143,220 @@ await fetch('/api/users', {
 In both cases, we assume that other parameters unrelated to pagination may be present. Let's dive
 into a implementing the simpler `GET` case first.
 
+```ts
+const API_ROOT = `https://${location.hostname}/api/`;
+
+function isOwnAPI(url: string): boolean {
+	return url.startsWith(API_ROOT) || url.startsWith('/');
+}
+
+function maybeAddPaginationLinks(request, doc) {
+  if (doc.content.meta?.total) {
+    const links = doc.content.links = doc.content.links ?? {};
+    const { limit, offset, total } = doc.content.meta;
+    const originalUrl = new Url(request.url);
+    
+    // add current
+    originalUrl.queryParams.set('limit', limit);
+    originalUrl.queryParams.set('offset', offset);
+    links.self = String(originalUrl);
+
+    // add first
+    if (offset === 0) {
+      links.first = links.self;
+    } else {
+      originalUrl.queryParams.set('offset', 0);
+      links.first = String(originalUrl);
+    }
+
+    // add prev
+    if (offset > 0) {
+      originalUrl.queryParams.set('offset', offset - limit);
+      links.prev = String(originalUrl);
+    } else {
+      links.prev = null;
+    }
+    
+    // add next
+    if (offset + limit < total) {
+      originalUrl.queryParams.set('offset', offset + limit);
+      links.next = String(originalUrl);
+    } else {
+      links.next = null;
+    }
+
+    // add last
+    const lastOffset = (Math.ceil(51 / 25) - 1) * limit;
+    originalUrl.queryParams.set('offset', lastOffset);
+    links.last = String(originalUrl);
+  }
+}
 
 
+export const AuthHandler = {
+  request({ request }, next) {
+		if (!request.url || !isOwnAPI(request.url)) {
+			return next(request);
+		}
+
+    return next(request)
+      .then(doc => maybeAddPaginationLinks(request, doc));
+  }
+}
+```
+
+And that's it! Now our response has the full range of links it can use for pagination
+features derived from our params based contract. In many cases, an API may not provide
+access to meta like this, but we can use limit and offset information from the original
+URL, and provide `null` for the `last` link, allowing cursor based navigation via next/prev
+as well as a return to start, which for most features is more than enough.
+
+But what happens when our endpoint requires the use of `POST` ? Let's explore!
+
+For this challenge, we are going to take advantage of the fact that the *first* request
+issued by the APP is issued directly (e.g. not via `await currentPage.next()` or similar
+but via `store.request({ url: '/users', method: 'POST', body })`).
+
+This gives us a key distinction to make when handling a request
+
+- requests that are the *first* in a series
+- requests that are a *continuation* of a series
+
+In this approach we'll want some state for book-keeping so we are going to implement a class
+for our handler and store a Map that holds on to a bit of info from first requests that
+we will need for a continuation request.
+
+The general strategy is that we generate a link (really just a unique string) that the app can
+use to make a `GET` request conceptually that works with `await page.next()`, but switch the
+request out for a `POST` request when we encounter the generated link in our handler.
+
+We also need a way to know that a request wants to opt into this pagination behavior,
+there's a number of heuristics we could use but for this example we're going to be
+explicit and pass an option into the initial request that tells us to make use of this
+feature.
+
+```ts
+store.request({
+  url: '/api/users',
+  method: 'POST',
+  body: JSON.stringify({ limit: 25, offset: 0 }),
+  options: { usePaginationEngine: true }
+})
+```
+
+```ts
+class QUERYPaginationEngine {
+  urlMap = new Map();
+
+  request({ request }, next) {
+    if (!request.url || !isOwnAPI(request.url)) {
+			return next(request);
+		}
+  
+    if (request.options?.usePaginationEngine) {
+      return handleInitialRequest(request, next, this.urlMap);
+    }
+
+    if (this.urlMap.has(request.url)) {
+      return handleContinuationRequest(request, next, this.urlMap);
+    }
+
+    return next(request);
+  }
+}
+```
+
+Above, if the request targets our own API and has requested to use the
+pagination engine, we handle the request as an "initial" request.
+
+If the url is a url in our url map, we handle it as a "continuation request",
+else we pass along this request since we aren't being asked to handle it.
+
+For this blog post I am only going to implement `next` link behavior, though
+as with the first `GET` example above we can follow this pattern for every
+pagination link we may want.
+
+```ts
+function insertNextLink(request, identifier)
+
+function handleInitialRequest(request, next, urlMap) {
+  if (request.method !== 'POST') {
+    throw new Error(
+      `The PaginationEngine handler expects usePaginationEngine to only be used with POST requests`
+    );
+  }
+
+  return handleRequest(request, next, urlMap);
+}
+
+async function handleRequest(request, next, urlMap) {
+  const identifier = request.store.identifierCache.getOrCreateDocumentIdentifier(request);
+	if (!identifier) {
+		throw new Error(
+			'The PaginationEngine handler expects the request to utilize a cache-key, but none was provided',
+		);
+	}
+
+	const response = await next(request);
+  const nextLink = `{@psuedo-link:next}//${identifier.lid}`;
+
+  const links = response.content.links = response.content.links ?? {};
+  links.next = nextLink;
+  urlMap.set(nextLink, request);
+
+  return response;
+}
+```
+
+Above, we create a fake url for our "next" link by generating a string that roughly says "I represent the next link for the quest with the following cache-key". Then we key the original request in our map to that
+link and move on. (Sidenote: if you want this handler to work with the PersistedCache experiment we will
+also need to setup a way to restore this map from cache, this is left for discussion at another time.)
+
+When the app calls `await page.next()`, it will effectively generate the request:
+
+```ts
+store.request({
+  method: 'GET',
+  url: `{@psuedo-link:next}//${identifier.lid}`
+})
+```
+
+When we see this link in the handler, we invoke `handleContinuationRequest`.
+
+```ts
+async function handleContinuationRequest(request, next, urlMap) {
+	const requestInfo = urlMap.get(request.url);
+	const upgradedRequest = buildPostRequest(request, requestInfo);
+
+  return handleRequest(upgradedRequest, next, urlMap);
+}
+
+function buildPostRequest(request: StoreRequest, requestInfo: PaginatedRequestInfo): StoreRequest {
+	const { parentRequest, actualUrl } = requestInfo;
+
+	const overrides: Record<string, unknown> = {
+		url: actualUrl,
+		method: 'POST',
+	};
+
+	if (parentRequest.headers) {
+		const headers = new Headers(parentRequest.headers);
+		request.headers?.forEach((value, key) => headers.set(key, value));
+		overrides.headers = headers;
+	}
+
+  // update the offset
+  const body = JSON.parse(parentRequest.body);
+  body.offset += body.limit;
+  overrides.body = JSON.stringify(body);
+
+	return Object.assign({}, request, overrides);
+}
+```
+
+And there we have it, our POST based API convention now plays along seamlessly with the
+simpler mental model of calling `await page.next()` on any collection.
 
 ## Implementing a Recommendation Engine
 
-pagination-engine
-
-multi-plexing
 
