@@ -394,9 +394,18 @@ For this example, we'll assume we have two endpoints:
 When we receive a request that wants to also fetch recommendations, we'll issue two
 requests and "mux" (combine) the response.
 
+Unlike above where we used `options` to pass the `usePaginationEngine` flag to the handler
+to activate it, here we are going to use a header (`X-Include-Recommendations`) and check
+for the value `'fetch'`. We're implementing it this way so that later we can refactor our
+API itself to accept this header as a way to know call our recommendations service to
+generate recommendations for the request and include them in the response.
+
+In this way, handlers can function to ponyfill how we want our API to behave even
+before we've had the time or ability to do so.
+
   
 ```ts
-function shouldMakeMLRecommendationsRequest(request) {
+function shouldMakeRecommendationsRequest(request) {
   return request.headers?.get('X-Include-Recommendations') === 'fetch';
 }
 
@@ -419,4 +428,124 @@ const RecommendationsHandler = {
 }
 ```
 
+In order to split our request into two requests we need a bit of extra data for
+the body of the request to send to our recommendations service. For this we will
+use `request.data.recommendations` to provide the additional options.
 
+```ts
+function invokeAndProcessMuxSuccess(request,next) {
+	const recommendationsRequest = buildRecommendationsRequest(request);
+  const dataPromise = next(request);
+	const recPromise = next(recommendationsRequest);
+
+	return Promise.allSettled([recPromise, dataPromise]).then(
+		([recs, data]) => {
+			// if data request errors, we error
+			if (data.status === 'rejected') {
+				throw data.reason;
+			}
+
+			// if ML request errors, we return data
+			if (recs.status === 'rejected') {
+				return data.value;
+			}
+
+			// if both succeed, we combine them into one response
+			return combineWithResult(data.value.content, recs.value.content);
+		},
+	);
+}
+
+function buildRecommendationsRequest(request) {
+  const body = JSON.stringify(
+    Object.assign({ limit: 5 }, request.data.recommendations)
+  );
+  
+	const url = buildBaseURL({ resourcePath: 'recommendations/match' });
+	const cacheKey = `${url}::${body}`;
+
+	return {
+		url,
+		method: 'POST',
+		options: {
+			key: cacheKey,
+		},
+		headers: new Headers({
+			'Content-Type': 'application/json',
+			'Accept': 'application/vnd.api+json',
+		}),
+		body,
+	};
+}
+
+function combineWithResult(primaryData, recs) {
+  const meta = Object.assign({}, primaryData.meta, { ml: recs.meta });
+  const included = primaryData.included.concat(recs.included);
+  const data = recs.data.concat(primaryData.data);
+  const links = primaryData.links ?? {};
+
+  return {
+    meta,
+    links,
+    data,
+    included
+  };
+}
+```
+
+And finally, what does using this look like in practice?
+
+```ts
+const options = await store.request({
+  method: 'GET',
+  url: '/api/users',
+  headers: new Headers({
+		'Content-Type': 'application/json',
+		'Accept': 'application/vnd.api+json',
+    'X-Include-Recommendations': 'fetch'
+  }),
+  data: {
+    recommendations: {
+      // various inputs for generating the recommendations
+      type: 'user',
+      limit: 3,
+      context: 'control-tester'
+    }
+  }
+});
+```
+
+Now, lets sugar this!
+
+Builders are great for sugar because on top of enabling easy reuse of common requests
+they can compose with each other to decorate requests.
+
+For the request above, we might use the `query('user')` as our base.
+
+```ts
+import { query } from '@ember-data/json-api/request';
+```
+
+Then write a simple builder that decorates our query requests:
+
+```ts
+function withRecommendations(queryInit, payload) {
+  queryInit.headers.set('X-Include-Recommendations', 'fetch');
+  queryInit.data = queryInit.data || {};
+  queryInit.data.recommendations = payload;
+
+  return queryInit;
+}
+```
+
+And then to use it:
+
+```ts
+const options = await store.request(withRecommendations(query('user'), {
+  type: 'user',
+  limit: 3,
+  context: 'control-tester'
+}));
+```
+
+Enjoy!
