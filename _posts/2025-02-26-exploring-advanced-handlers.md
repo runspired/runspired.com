@@ -1,7 +1,6 @@
 ---
 title: Exploring Advanced Request Handlers in WarpDrive
 published: true
-draft: true
 ---
 
 # Exploring Advanced Request Handlers in WarpDrive
