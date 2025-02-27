@@ -79,7 +79,7 @@ a `recommendation engine`.
 
 ## Implementing a Pagination Engine
 
-When using [JSON:API](https://jsonapi.org/format/#fetching-pagination), pagination is implemented using
+When using [{JSON:API}](https://jsonapi.org/format/#fetching-pagination), pagination is implemented using
 links at the top level of the response which describe where to get other pages of data related to the
 current response.
 
@@ -100,8 +100,9 @@ current response.
 
 WarpDrive adopted this convention as part of its Cache API. When a cache receives a request, it returns a
 "response document" that describes what it found in the content for that request. While the cache does not
-need to be in JSON:API format, this response document needs to be in a universal format and so WarpDrive
-adopted the top-level structure from JSON:API to use due to its expressiveness.
+need to be in [{JSON:API}](https://jsonapi.org/format/#fetching-pagination) format, this response document
+needs to be in a universal format and so WarpDrive adopted the top-level structure from [{JSON:API}](https://jsonapi.org/format/#fetching-pagination)
+to use due to its expressiveness.
 
 When the WarpDrive Store creates a reactive wrapper for this response document, it exposes utility methods
 for working with the request. For instance, to fetch the next page, we can call `next`
@@ -388,8 +389,8 @@ request can make a "recommendations" request alongside the "options" request.
 
 For this example, we'll assume we have two endpoints:
 
-- `POST /api/recommendations` which returns recommendations for resources of type <entity> in `JSON:API` format.
-- `GET /api/<entity>` which returns a page of results of resource type `<entity>` in `JSON:API` format
+- `POST /api/recommendations` which returns recommendations for resources of type `<entity>` in [{JSON:API}](https://jsonapi.org/format/#fetching-pagination) format.
+- `GET /api/<entity>` which returns a page of results of resource type `<entity>` in [{JSON:API}](https://jsonapi.org/format/#fetching-pagination) format
 
 When we receive a request that wants to also fetch recommendations, we'll issue two
 requests and "mux" (combine) the response.
@@ -434,26 +435,26 @@ use `request.data.recommendations` to provide the additional options.
 
 ```ts
 function invokeAndProcessMuxSuccess(request,next) {
-	const recommendationsRequest = buildRecommendationsRequest(request);
+  const recommendationsRequest = buildRecommendationsRequest(request);
   const dataPromise = next(request);
-	const recPromise = next(recommendationsRequest);
+  const recPromise = next(recommendationsRequest);
 
-	return Promise.allSettled([recPromise, dataPromise]).then(
-		([recs, data]) => {
-			// if data request errors, we error
-			if (data.status === 'rejected') {
-				throw data.reason;
-			}
+  return Promise.allSettled([recPromise, dataPromise]).then(
+    ([recs, data]) => {
+      // if data request errors, we error
+      if (data.status === 'rejected') {
+        throw data.reason;
+      }
 
-			// if ML request errors, we return data
-			if (recs.status === 'rejected') {
-				return data.value;
-			}
+      // if ML request errors, we return data
+      if (recs.status === 'rejected') {
+        return data.value;
+      }
 
-			// if both succeed, we combine them into one response
-			return combineWithResult(data.value.content, recs.value.content);
-		},
-	);
+      // if both succeed, we combine them into one response
+      return combineWithResult(data.value.content, recs.value.content);
+    },
+  );
 }
 
 function buildRecommendationsRequest(request) {
@@ -461,21 +462,21 @@ function buildRecommendationsRequest(request) {
     Object.assign({ limit: 5 }, request.data.recommendations)
   );
   
-	const url = buildBaseURL({ resourcePath: 'recommendations/match' });
-	const cacheKey = `${url}::${body}`;
+  const url = buildBaseURL({ resourcePath: 'recommendations/match' });
+  const cacheKey = `${url}::${body}`;
 
-	return {
-		url,
-		method: 'POST',
-		options: {
-			key: cacheKey,
-		},
-		headers: new Headers({
-			'Content-Type': 'application/json',
-			'Accept': 'application/vnd.api+json',
-		}),
-		body,
-	};
+  return {
+    url,
+    method: 'POST',
+    options: {
+      key: cacheKey,
+    },
+    headers: new Headers({
+      'Content-Type': 'application/json',
+      'Accept': 'application/vnd.api+json',
+    }),
+    body,
+  };
 }
 
 function combineWithResult(primaryData, recs) {
@@ -500,8 +501,8 @@ const options = await store.request({
   method: 'GET',
   url: '/api/users',
   headers: new Headers({
-		'Content-Type': 'application/json',
-		'Accept': 'application/vnd.api+json',
+    'Content-Type': 'application/json',
+    'Accept': 'application/vnd.api+json',
     'X-Include-Recommendations': 'fetch'
   }),
   data: {
