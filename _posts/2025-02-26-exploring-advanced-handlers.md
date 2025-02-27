@@ -29,19 +29,19 @@ like setting up authentication tokens or adding tracing for observability toolin
 const API_ROOT = `https://${location.hostname}/api/`;
 
 function isOwnAPI(url: string): boolean {
-	return url.startsWith(API_ROOT) || url.startsWith('/');
+  return url.startsWith(API_ROOT) || url.startsWith('/');
 }
 
 function decorateOwnRequest(session, request) {
-	const headers = new Headers(request.headers);
-	headers.set('X-Amzn-Trace-Id', `Root=${crypto.randomUUID()}`);
+  const headers = new Headers(request.headers);
+  headers.set('X-Amzn-Trace-Id', `Root=${crypto.randomUUID()}`);
 
-	const token = session?.token;
-	if (token) {
-		headers.set('token', token);
-	}
+  const token = session?.token;
+  if (token) {
+    headers.set('token', token);
+  }
 
-	return Object.assign({}, request, { headers });
+  return Object.assign({}, request, { headers });
 }
 
 
@@ -51,9 +51,9 @@ export class AuthHandler {
   }
 
   async request({ request }, next) {
-		if (!request.url || !isOwnAPI(request.url)) {
-			return next(request);
-		}
+    if (!request.url || !isOwnAPI(request.url)) {
+      return next(request);
+    }
 
     return next(decorateOwnRequest(request));
   }
@@ -147,7 +147,7 @@ into a implementing the simpler `GET` case first.
 const API_ROOT = `https://${location.hostname}/api/`;
 
 function isOwnAPI(url: string): boolean {
-	return url.startsWith(API_ROOT) || url.startsWith('/');
+  return url.startsWith(API_ROOT) || url.startsWith('/');
 }
 
 function maybeAddPaginationLinks(request, doc) {
@@ -190,14 +190,15 @@ function maybeAddPaginationLinks(request, doc) {
     originalUrl.queryParams.set('offset', lastOffset);
     links.last = String(originalUrl);
   }
+
+  return doc;
 }
 
-
-export const AuthHandler = {
+export const BasicPaginationHandler = {
   request({ request }, next) {
-		if (!request.url || !isOwnAPI(request.url)) {
-			return next(request);
-		}
+    if (!request.url || !isOwnAPI(request.url)) {
+      return next(request);
+    }
 
     return next(request)
       .then(doc => maybeAddPaginationLinks(request, doc));
@@ -250,8 +251,8 @@ class QUERYPaginationEngine {
 
   request({ request }, next) {
     if (!request.url || !isOwnAPI(request.url)) {
-			return next(request);
-		}
+      return next(request);
+    }
   
     if (request.options?.usePaginationEngine) {
       return handleInitialRequest(request, next, this.urlMap);
@@ -277,7 +278,6 @@ as with the first `GET` example above we can follow this pattern for every
 pagination link we may want.
 
 ```ts
-function insertNextLink(request, identifier)
 
 function handleInitialRequest(request, next, urlMap) {
   if (request.method !== 'POST') {
@@ -291,13 +291,13 @@ function handleInitialRequest(request, next, urlMap) {
 
 async function handleRequest(request, next, urlMap) {
   const identifier = request.store.identifierCache.getOrCreateDocumentIdentifier(request);
-	if (!identifier) {
-		throw new Error(
-			'The PaginationEngine handler expects the request to utilize a cache-key, but none was provided',
-		);
-	}
+  if (!identifier) {
+    throw new Error(
+      'The PaginationEngine handler expects the request to utilize a cache-key, but none was provided',
+    );
+  }
 
-	const response = await next(request);
+  const response = await next(request);
   const nextLink = `{@psuedo-link:next}//${identifier.lid}`;
 
   const links = response.content.links = response.content.links ?? {};
@@ -325,32 +325,32 @@ When we see this link in the handler, we invoke `handleContinuationRequest`.
 
 ```ts
 async function handleContinuationRequest(request, next, urlMap) {
-	const requestInfo = urlMap.get(request.url);
-	const upgradedRequest = buildPostRequest(request, requestInfo);
+  const requestInfo = urlMap.get(request.url);
+  const upgradedRequest = buildPostRequest(request, requestInfo);
 
   return handleRequest(upgradedRequest, next, urlMap);
 }
 
-function buildPostRequest(request: StoreRequest, requestInfo: PaginatedRequestInfo): StoreRequest {
-	const { parentRequest, actualUrl } = requestInfo;
+function buildPostRequest(request: StoreRequest, parentRequest: PaginatedRequestInfo): StoreRequest {
+  const { url } = parentRequest;
 
-	const overrides: Record<string, unknown> = {
-		url: actualUrl,
-		method: 'POST',
-	};
+  const overrides: Record<string, unknown> = {
+    url,
+    method: 'POST',
+  };
 
-	if (parentRequest.headers) {
-		const headers = new Headers(parentRequest.headers);
-		request.headers?.forEach((value, key) => headers.set(key, value));
-		overrides.headers = headers;
-	}
+  if (parentRequest.headers) {
+    const headers = new Headers(parentRequest.headers);
+    request.headers?.forEach((value, key) => headers.set(key, value));
+    overrides.headers = headers;
+  }
 
   // update the offset
   const body = JSON.parse(parentRequest.body);
   body.offset += body.limit;
   overrides.body = JSON.stringify(body);
 
-	return Object.assign({}, request, overrides);
+  return Object.assign({}, request, overrides);
 }
 ```
 
@@ -358,5 +358,65 @@ And there we have it, our POST based API convention now plays along seamlessly w
 simpler mental model of calling `await page.next()` on any collection.
 
 ## Implementing a Recommendation Engine
+
+On the surface, it seems like WarpDrive's managed fetch pipeline treats requests as 1:1
+with a call to an API endpoint or a query on some other source (like a local database).
+
+But the reality is more nuanced: WarpDrive thinks about requests as 1:1 with a response. 
+
+Catch that? The nuance is very subtle. Possibly imperceptible.
+
+It helps to explore this via a real world example.
+
+Lets say you want to request options for a select, and in that list of options you also
+want to include a few "recommended" options near the top that based on some criteria are
+more likely to be what the user is searching for.
+
+The naive way of implementing this is as two requests, one for options (perhaps filtered
+and sorted) and another for recommendations. Then in the app we splice the two arrays
+together and pass them into our select component.
+
+Its not bad, but it is often a lot of work to transform the shapes of the two responses into
+the same shape, and doing so defeats much of the power of using reactive cache-driven resources.
+
+Taking a step back though we see that while we have two requests, conceptually we really have
+just one "request" for options with recommendations and one "response" or result being the
+merger of these.
+
+Lets implement a handler that understands this requirement, and does so in a way that any
+request can make a "recommendations" request alongside the "options" request.
+
+For this example, we'll assume we have two endpoints:
+
+- `POST /api/recommendations` which returns recommendations for resources of type <entity> in `JSON:API` format.
+- `GET /api/<entity>` which returns a page of results of resource type `<entity>` in `JSON:API` format
+
+When we receive a request that wants to also fetch recommendations, we'll issue two
+requests and "mux" (combine) the response.
+
+  
+```ts
+function shouldMakeMLRecommendationsRequest(request) {
+  return request.headers?.get('X-Include-Recommendations') === 'fetch';
+}
+
+function invokeAndProcessMuxSuccess(request, next) {
+  // ... implemented below later ... //
+}
+
+const RecommendationsHandler = {
+  request({ request }, next) {
+    if (!request.url || !isOwnAPI(request.url)) {
+      return next(request);
+    }
+
+    if (shouldMakeRecommendationsRequest(request)) {
+      return invokeAndProcessMuxSuccess(request, next);
+    }
+
+    return next(request);
+  }
+}
+```
 
 
