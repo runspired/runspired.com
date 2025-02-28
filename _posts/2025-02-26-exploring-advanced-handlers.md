@@ -107,8 +107,8 @@ When the WarpDrive Store creates a reactive wrapper for this response document, 
 for working with the request. For instance, to fetch the next page, we can call `next`
 
 ```ts
-const currentPage = await store.request({ url: '/api/users' });
-const nextPage = await currentPage.next();
+const { content: currentPage } = await store.request({ url: '/api/users' });
+const { content: nextPage } = await currentPage.next();
 ```
 
 This feature allows applications to construct advanced pagination logic in a highly conventional
