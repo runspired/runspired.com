@@ -18,6 +18,10 @@ one of the reasons that WarpDrive only needs computed and signal from the TC39 s
 and does not require either effects or relay is that while we support imperative
 code, we enable all work to be done in a reactive derived manner.
 
+Further, we actively want to steer apps away from async computeds and feel
+such a primitive would be an unmitigated disaster https://github.com/tc39/proposal-signals/issues/30 
+representing the totality of the worst-parts of javascript and EmberData historically.
+
 This was the underlying message of the introduction of the methods and components
 for Reactive Control Flow.
 
