@@ -145,7 +145,9 @@ In the GraphQL example, GraphQL is serving as both the schema and the request DS
 
 And the same goes for tons of other DSLs and mechanisms of producing schemas. What happens when you want to supply your data schemas from SQL table schemas or OpenAPI specs, or compile them from types, or deliver them on-demand from your API to ensure they are always consistent with what your API is providing?
 
-While its likely that *Warp***Drive** will eventually ship with one or more DSLs for requests and schemas, this architecture ensures flexibility and maintainability over time.
+While its likely that *Warp***Drive** will eventually ship with one or more DSLs for requests and schemas, this architecture ensures flexibility and maintainability over time. 
+
+A custom DSL is the last thing you should add to your project. Some folks might interpret this to mean you shouldn't use a DSL or should never add a DSL. That isn't what I'm saying. DSLs are like optimizing the last 100ft of a delivery coming from a hundred miles away. It matters, but the spec and underlying representation need to be solid first.
 
 ## A Parting Thought on MCP in the Context of DSLs
 
