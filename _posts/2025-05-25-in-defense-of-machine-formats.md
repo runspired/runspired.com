@@ -12,7 +12,7 @@ I've been thinking on DSLs lately and how many of them invert the problem space.
 
 In [*Warp***Drive**](https://warp-drive.io), we chose to remove our custom DSL in favor of JSON, a decision I'll discuss a bit after detailing some of the underlying thought processes that led to this decision.
 
-<img src="./images/machine-exchange-format.png" width="100%" alt="Lots of machines all talking with each other">
+<img src="/images/machine-exchange-format.png" width="100%" alt="Lots of machines all talking with each other">
 
 ## Stability of the Output is more important than Stability of the Input
 
@@ -55,7 +55,7 @@ The ability to both **access** and **directly use** the actual format is key.
 
 While DSLs are nice for authoring sugar, if they don't decompose to an agnostic machine exchangeable format - or they don't expose that format for direct use - they become too restrictive and present a significant long-term maintenance risk.
 
-As is the order of operations: these custom ORM DSLs only became possible because there were existing stable formats for them to decompose to.
+As is the order of operations: these custom ORM DSLs only became possible because there were existing stable formats for them to decompose into.
 
 ## Great DSLs
 
