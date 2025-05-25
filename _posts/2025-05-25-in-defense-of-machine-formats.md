@@ -12,7 +12,7 @@ I've been thinking on DSLs lately and how many of them invert the problem space.
 
 In [*Warp***Drive**](https://warp-drive.io), we chose to remove our custom DSL in favor of JSON, a decision I'll discuss a bit after detailing some of the underlying thought processes that led to this decision.
 
-<img src="../assets/images/machine-exchange-format.png" width="100%" alt="Lots of machines all talking with each other">
+<img src="../../../assets/images/machine-exchange-format.png" width="100%" alt="Lots of machines all talking with each other">
 
 ## Stability of the Output is more important than Stability of the Input
 
