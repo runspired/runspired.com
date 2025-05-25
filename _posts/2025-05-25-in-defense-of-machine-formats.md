@@ -54,11 +54,11 @@ The ability to both **access** and **directly use** the actual format is key.
 
 While DSLs are nice for authoring sugar, if they don't decompose to an agnostic machine exchangeable format - or they don't expose that format for direct use - they become too restrictive and present a significant long-term maintenance risk.
 
-As is the order of operations: these custom ORM DSLs only became possible because there were existing stable formats for them to decompose into.
+As is the order of operations: these custom ORM DSLs only became possible *because* there were **existing** stable formats for them to decompose into.
 
 ## Great DSLs
 
-Custom ORM DSLs only became possible because there were existing stable formats for them to decompose to. The key point here is that the DSL is not the spec: the stable representations came first and defined a spec and the DSL produces spec compliant output.
+The crucial point the above discussion is teasing is that the DSL should not be the spec. Stable representations come first and define a spec, and DSLs produce spec compliant output.
 
 This is one of several common patterns that in my experience all great DSLs follow.
 
