@@ -120,7 +120,7 @@ both for requests and for schemas. We had one planned for schemas early in the d
 
 Why little value?
 
-Because creating resource schemas is something you don't do regularly. But also because the JSON schemas are fully typed which results in both editor autocomplete and is AI prompt completions assisting you far more easily than they could in the class approach.
+Because creating resource schemas is something you don't do regularly. But also because the JSON schemas are fully typed which results in both editor autocomplete and AI prompt completions assisting you far more easily than they could in the class approach.
 
 This is beside the point though, DSLs are still allowed. It's just important that the underlying representation is JSON and is directly usable. By doing this, we've set up *Warp***Drive** for greater short term and long term success.
 
