@@ -1,7 +1,6 @@
 ---
 title: In Defense of Machine Exchangeable Formats
 published: true
-draft: true
 ---
 
 # In Defense of Machine Exchangeable Formats
